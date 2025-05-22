@@ -1,7 +1,6 @@
-# py_usb_controller
+# st3215多轴系统上位机
 
-- st3215 电机 python usb 直接驱动
-- act机械臂同步运动
+- 配套下位机：https://github.com/umas2022/MultiAxisHandler_ST3215
 
 
 ```bash
