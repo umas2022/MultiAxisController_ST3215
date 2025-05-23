@@ -87,7 +87,7 @@ class MotorInitToolGUI(QWidget):
         ping_layout = QHBoxLayout()
         self.ping_input = QLineEdit()
         self.ping_input.setPlaceholderText("电机ID")
-        ping_button = QPushButton("PING 电机")
+        ping_button = QPushButton("PING电机")
         ping_button.clicked.connect(self.send_ping_command)
         ping_layout.addWidget(ping_button)
         ping_layout.addWidget(self.ping_input)
@@ -99,7 +99,7 @@ class MotorInitToolGUI(QWidget):
         self.oldid_input.setPlaceholderText("旧ID")
         self.newid_input = QLineEdit()
         self.newid_input.setPlaceholderText("新ID")
-        setid_button = QPushButton("设置电机ID")
+        setid_button = QPushButton("设置ID")
         setid_button.clicked.connect(self.send_setid_command)
         setid_layout.addWidget(setid_button)
         setid_layout.addWidget(self.oldid_input)
@@ -110,7 +110,7 @@ class MotorInitToolGUI(QWidget):
         setzero_layout = QHBoxLayout()
         self.setzero_input = QLineEdit()
         self.setzero_input.setPlaceholderText("电机ID")
-        setzero_button = QPushButton("设置电机中点")
+        setzero_button = QPushButton("设置中点")
         setzero_button.clicked.connect(self.send_setzero_command)
         setzero_layout.addWidget(setzero_button)
         setzero_layout.addWidget(self.setzero_input)
@@ -118,43 +118,57 @@ class MotorInitToolGUI(QWidget):
 
         # ➤ 4. TEST
         test_layout = QHBoxLayout()
-        self.test_input = QLineEdit()
-        self.test_input.setPlaceholderText("电机ID")
-        test_button = QPushButton("电机转动测试")
+        self.test_input_id = QLineEdit()
+        self.test_input_id.setPlaceholderText("电机ID")
+        self.test_input_direct = QLineEdit()
+        self.test_input_direct.setPlaceholderText("转动方向(0/1)")
+        self.test_input_step = QLineEdit()
+        self.test_input_step.setPlaceholderText("目标步数")
+        test_button = QPushButton("转动测试")
         test_button.clicked.connect(self.send_run_command)
         test_layout.addWidget(test_button)
-        test_layout.addWidget(self.test_input)
+        test_layout.addWidget(self.test_input_id)
+        test_layout.addWidget(self.test_input_direct)
+        test_layout.addWidget(self.test_input_step)
         parent_layout.addLayout(test_layout)
 
     def send_ping_command(self):
         motor_id = self.ping_input.text().strip()
         if motor_id:
-            self.send_text_command(f"PING {motor_id}")
+            # self.send_text_command(f"PING {motor_id}")
+            self.send_byte_command([0x01, 0x01, int(motor_id)])
 
     def send_setid_command(self):
         old_id = self.oldid_input.text().strip()
         new_id = self.newid_input.text().strip()
         if old_id and new_id:
-            self.send_text_command(f"SET_ID {old_id} {new_id}")
+            self.send_byte_command([0x02, 0x02, int(old_id), int(new_id)])
 
     def send_setzero_command(self):
         motor_id = self.setzero_input.text().strip()
         if motor_id:
-            self.send_text_command(f"SET_ZERO {motor_id}")
+            self.send_byte_command([0x03, 0x01, int(motor_id)])
 
     def send_run_command(self):
-        motor_id = self.test_input.text().strip()
-        if motor_id:
-            self.send_text_command(f"TEST {motor_id}")
+        motor_id = self.test_input_id.text().strip()
+        direction = self.test_input_direct.text().strip()
+        step = self.test_input_step.text().strip()
+        if not motor_id or not direction or not step:
+            self.log.append("请填写电机ID、转动方向和目标步数！")
+            return
+        step_low = int(step) & 0xFF  # 低8位
+        step_high = (int(step) >> 8) & 0xFF  # 高8位
+        self.send_byte_command([0x04, 0x04, int(motor_id), int(direction), int(step_high), int(step_low)])
 
-    def send_text_command(self, text_command):
+    def send_byte_command(self, byte_command):
         if not self.serial_port or not self.serial_port.is_open:
             self.log.append("串口未连接，无法发送指令！")
             return
         try:
-            full_command = text_command + "\n"
-            self.serial_port.write(full_command.encode("utf-8"))
-            self.log.append(f"发送指令: {text_command}")
+            checksum = sum(byte_command) & 0xFF
+            frame = bytearray([0xAA] + byte_command + [checksum])
+            self.serial_port.write(frame)
+            self.log.append(f"发送指令: {[hex(b) for b in frame]}")
         except Exception as e:
             self.log.append(f"发送失败: {e}")
 
@@ -162,8 +176,10 @@ class MotorInitToolGUI(QWidget):
         if self.serial_port and self.serial_port.in_waiting:
             try:
                 data = self.serial_port.read(self.serial_port.in_waiting)
-                text = data.decode("utf-8", errors="replace")
-                self.log.append(text)
+                # text = data.decode("utf-8", errors="replace")
+                # self.log.append(text)
+                hex_str = " ".join(f"{byte:02X}" for byte in data)
+                self.log.append(hex_str)
             except Exception as e:
                 self.log.append(f"读取失败: {e}")
 
