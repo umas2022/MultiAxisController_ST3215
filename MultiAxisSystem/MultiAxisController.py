@@ -3,6 +3,10 @@ import time
 import numpy as np
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+import threading
+import serial
+from queue import Queue
+
 
 sys.path.append("..")
 from STservo_sdk import *
@@ -14,6 +18,8 @@ CMD_SET_ZERO = 0x03
 CMD_MOVE_MAX_SPD = 0x04
 CMD_MOVE_SPD_ACC = 0x05
 CMD_GET_POS = 0x06
+CMD_GET_LOAD = 0x07
+CMD_GET_TEMP = 0x08
 
 
 @dataclass
@@ -26,6 +32,9 @@ class MotorConfig:
 
 
 class MultiAxisControllerInterface(ABC):
+    '''
+    多轴控制器接口
+    '''
 
     @abstractmethod
     def hardware_init(self) -> bool:
@@ -115,7 +124,6 @@ class MultiAxisUSB(MultiAxisControllerInterface):
         self.baudrate = 1000000
 
         self.motors_list: list[MotorConfig] = []
-        self.motors_num = 0
 
         try:
             self.port_handler = PortHandler(self.serial_port)
@@ -238,14 +246,28 @@ class MultiAxisSerial(MultiAxisControllerInterface):
         self.serial_port = serial_port
         self.baudrate = 115200
         self.port_handler = None
-
         self.motors_list: list[MotorConfig] = []
-        self.motors_num = 0
+
+        # 串口异步通信，线程在hardware_init之后启动
+        self.read_queue = Queue()
+        self.running = True
+        self.read_thread = threading.Thread(target=self.read_loop)
+        self.read_thread.daemon = True
+
+    def read_loop(self):
+        """
+        异步读取串口数据
+        """
+        while self.running:
+            if self.port_handler.in_waiting:
+                data = self.port_handler.read(self.port_handler.in_waiting)
+                self.read_queue.put(data)
 
     def hardware_init(self) -> bool:
         try:
             self.port_handler = serial.Serial(self.serial_port, baudrate=self.baudrate, timeout=0.1)
             print(f"已连接到 {self.serial_port}")
+            self.read_thread.start()
             return True
         except Exception as e:
             print(f"连接失败: {e}")
@@ -262,48 +284,64 @@ class MultiAxisSerial(MultiAxisControllerInterface):
             checksum = sum(byte_command) & 0xFF
             frame = bytearray([0xAA] + byte_command + [checksum])
             self.port_handler.write(frame)
-            print(f"发送指令: {[hex(b) for b in frame]}")
+            # print(f"发送指令: {[hex(b) for b in frame]}")
         except Exception as e:
             print(f"发送失败: {e}")
 
-    def receive_response(self, expected_cmd, timeout=1.0) -> list | None:
+
+        
+    def get_response(self, cmd: int, timeout: float = 0.5):
         """
-        接收来自下位机的返回消息
-        :param expected_cmd: 等待的命令编号（带 0x80 偏移）
-        :param timeout: 超时秒数
-        :return: 返回字节列表或 None
+        从队列中获取匹配指定 cmd 的响应
+        :param cmd: 期望的命令码（下位机返回的 cmd 通常是请求 cmd | 0x80）
+        :param timeout: 最大等待时间（秒）
+        :return: 匹配的消息 bytes 或 None
         """
+        import time
         start_time = time.time()
-        buffer = []
+        temp_queue = []
 
         while time.time() - start_time < timeout:
-            if self.port_handler.in_waiting:
-                byte = self.port_handler.read(1)
-                buffer.append(ord(byte))
-                # 检查是否收到了完整的包头
-                if len(buffer) >= 2 and buffer[0] == 0xAA:
-                    cmd = buffer[1]
-                    if cmd == expected_cmd:
-                        # 获取数据长度
-                        while len(buffer) < 3:
-                            if self.port_handler.in_waiting:
-                                buffer.append(ord(self.port_handler.read(1)))
-                        data_len = buffer[2]
-                        while len(buffer) < 3 + data_len + 1:  # data + checksum
-                            if self.port_handler.in_waiting:
-                                buffer.append(ord(self.port_handler.read(1)))
-                        return buffer
-                    else:
-                        buffer = []  # 重新等待正确的命令
-            else:
+            try:
+                # 尝试获取队列中的一条消息（不阻塞）
+                response = self.read_queue.get_nowait()
+
+                # 检查格式是否正确，以及 cmd 是否匹配
+                if len(response) >= 3 and response[1] == (cmd | 0x80):
+                    # 将暂存的其他消息重新放回队列
+                    for item in temp_queue:
+                        self.read_queue.put(item)
+                    return response
+
+                # 不符合就暂存
+                temp_queue.append(response)
+
+            except Exception:
+                # 如果队列空了，稍等再试
                 time.sleep(0.01)
+
+        # 超时，恢复所有暂存的消息
+        for item in temp_queue:
+            self.read_queue.put(item)
+
         return None
+        
+
+    def get_response_last(self):
+        """
+        接收来自下位机的最后一条返回消息  
+        """
+        try:
+            return self.read_queue.get(timeout=0.5)
+        except:
+            return None
+    
 
     def online_check(self) -> bool:
         offline_list = []
         for each_motor in self.motors_list:
             self.send_byte_command([CMD_PING, 0x01, int(each_motor.id)])
-            response = self.receive_response(CMD_PING | 0x80)
+            response = self.get_response(CMD_PING | 0x80)
             if response is None:
                 print(f"serial response error")
                 continue
@@ -338,34 +376,58 @@ class MultiAxisSerial(MultiAxisControllerInterface):
     def move_excute(self) -> None:
         pass
 
-    def get_one_param(self, id: int, cmd: int) -> list:
-        self.send_byte_command([cmd, 0x01, id])
-        response = self.receive_response(cmd | 0x80)
-        if response is None:
-            print(f"serial response error")
-            return []
-        return response
 
     def get_all_position(self) -> list:
         pos_list = []
         for each_motor in self.motors_list:
             self.send_byte_command([CMD_GET_POS, 0x01, int(each_motor.id)])
-            response = self.receive_response(CMD_GET_POS | 0x80)
-            if len(response) < 6:
-                print(f"Motor {each_motor.id} response error")
+            response = self.get_response(CMD_GET_POS)
+            try:
+                pos_high = response[3]
+                pos_low = response[4]
+                pos = (pos_high << 8) + pos_low
+                pos_list.append(pos)
+            except Exception as e:
+                print(f"Motor {each_motor.id} response error: {e}")
                 pos_list.append(0)
                 continue
-            pos_high = response[3]
-            pos_low = response[4]
-            pos = (pos_high << 8) + pos_low
-            print(f"Motor {each_motor.id} position: {[hex(b) for b in response]}")
-            print(f"Motor {each_motor.id} position: {pos}")
+        return pos_list
 
     def get_all_load(self) -> list:
-        pass
+        load_list = []
+        for each_motor in self.motors_list:
+            self.send_byte_command([CMD_GET_LOAD, 0x01, int(each_motor.id)])
+            response = self.get_response(CMD_GET_LOAD)
+            try:
+                sign = response[3]
+                load_high = response[4]
+                load_low = response[5]
+                load = (load_high << 8) + load_low
+                if sign == 0x01:
+                    load = -load
+                load_list.append(load)
+            except Exception as e:
+                print(f"Motor {each_motor.id} response error: {e}")
+                load_list.append(0)
+                continue
+        return load_list
+
 
     def get_all_temper(self) -> list:
-        pass
+        temper_list = []
+        for each_motor in self.motors_list:
+            self.send_byte_command([CMD_GET_TEMP, 0x01, int(each_motor.id)])
+            response = self.get_response(CMD_GET_TEMP)
+            try:
+                temper_high = response[3]
+                temper_low = response[4]
+                pos = (temper_high << 8) + temper_low
+                temper_list.append(pos)
+            except Exception as e:
+                print(f"Motor {each_motor.id} response error: {e}")
+                temper_list.append(0)
+                continue
+        return temper_list
 
     def move_all_init(self, spd, acc) -> None:
         for each_motor in self.motors_list:
