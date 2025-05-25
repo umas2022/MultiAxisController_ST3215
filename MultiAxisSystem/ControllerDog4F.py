@@ -20,9 +20,13 @@ class ControllerDog4F:
             raise ValueError("Unknown mode")
 
         self.ctrl.motors_list = [
+            # left front
             MotorConfig(id=1, min=0, max=4096, init=2048, reverse=False),
+            # right front
             MotorConfig(id=2, min=0, max=4096, init=2048, reverse=True),
+            # left back
             MotorConfig(id=3, min=0, max=4096, init=2048, reverse=False),
+            # right back
             MotorConfig(id=4, min=0, max=4096, init=2048, reverse=True),
         ]
 
@@ -49,10 +53,60 @@ class ControllerDog4F:
 
     def get_all_temper(self) -> list:
         return self.ctrl.get_all_temper()
+    
+    def go_forward(self):
+        spd_list = [2000]*4
+        acc_list = [50]*4
+        period = 0.3
+        
+        self.ctrl.move_all_offset([300,0,0,300], spd_list, acc_list)
+        time.sleep(period)
+        self.ctrl.move_all_offset([300,-300,-300,300], spd_list, acc_list)
+        time.sleep(period)
+        self.ctrl.move_all_offset([0,-300,-300,0], spd_list, acc_list)
+        time.sleep(period)
+        self.ctrl.move_all_offset([0,0,0,0], spd_list, acc_list)
+        time.sleep(period)
+        
+        self.ctrl.move_all_offset([0,300,300,0], spd_list, acc_list)
+        time.sleep(period)
+        self.ctrl.move_all_offset([-300,300,300,-300], spd_list, acc_list)
+        time.sleep(period)
+        self.ctrl.move_all_offset([-300,0,0,-300], spd_list, acc_list)
+        time.sleep(period)
+        self.ctrl.move_all_offset([0,0,0,0], spd_list, acc_list)
+
+    def go_left(self):
+        spd_list = [2000]*4
+        acc_list = [50]*4
+        period = 0.3
+        
+        self.ctrl.move_all_offset([-300,0,0,300], spd_list, acc_list)
+        time.sleep(period)
+        self.ctrl.move_all_offset([-300,-300,300,300], spd_list, acc_list)
+        time.sleep(period)
+        self.ctrl.move_all_offset([0,-300,300,0], spd_list, acc_list)
+        time.sleep(period)
+        self.ctrl.move_all_offset([0,0,0,0], spd_list, acc_list)
+        time.sleep(period)
+        
+    def go_right(self):
+        spd_list = [2000]*4
+        acc_list = [50]*4
+        period = 0.3
+        
+        self.ctrl.move_all_offset([-0,-300,300,0], spd_list, acc_list)
+        time.sleep(period)
+        self.ctrl.move_all_offset([-300,-300,300,300], spd_list, acc_list)
+        time.sleep(period)
+        self.ctrl.move_all_offset([-300,0,0,300], spd_list, acc_list)
+        time.sleep(period)
+        self.ctrl.move_all_offset([0,0,0,0], spd_list, acc_list)
+        time.sleep(period)
 
 
 
-dog4f = ControllerDog4F(mode="serial", serial_port="COM21")
+dog4f = ControllerDog4F(mode="serial", serial_port="COM23")
 dog4f.hardware_init()
 
 print("online_check")
@@ -64,7 +118,6 @@ time.sleep(2)
 
 print("move test")
 while True:
-    dog4f.move_all_offset([512]*4, [2000]*4, [50]*4)
-    time.sleep(1)
-    dog4f.move_all_offset([-512]*4, [2000]*4, [50]*4)
-    time.sleep(1)
+    dog4f.go_forward()
+    # dog4f.go_left()
+    # dog4f.go_right()
