@@ -1,6 +1,6 @@
 # st3215多轴运动系统python上位机
 
-- 支持usb直连电机，或esp32串口
+- 支持上位机usb直连电机，或通过有线串口、蓝牙串口、UDP连接esp32下位机控制电机
 - 配套esp32下位机：https://github.com/umas2022/MultiAxisHandler_ST3215
 
 
@@ -19,8 +19,8 @@
   - 硬件系统性能测试脚本
 
 - toolbox/
-  - 基于MultiAxisSystem的工具包
+  - 基于MultiAxisSystem的调试工具包
 
 
 ## 待办
-- MultiAxisSerial串口返回消息没有校验
+- 串口和udp返回消息没有校验
