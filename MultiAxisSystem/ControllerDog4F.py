@@ -107,7 +107,7 @@ class ControllerDog4F:
         time.sleep(period)
 
 
-dog4f = ControllerDog4F(mode="serial", serial_port="COM16")
+dog4f = ControllerDog4F(mode="serial", serial_port="COM23")
 # dog4f = ControllerDog4F(mode="udp")
 dog4f.hardware_init()
 
@@ -120,6 +120,6 @@ time.sleep(2)
 
 print("move test")
 while True:
-    # dog4f.go_forward()
-    dog4f.go_left()
+    dog4f.go_forward()
+    # dog4f.go_left()
     # dog4f.go_right()
