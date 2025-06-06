@@ -50,28 +50,42 @@ class ControllerDog8F:
         self.ctrl.move_all_init(spd, acc)
 
     def stand_up(self):
-        self.ctrl.move_all_offset([-500, -300, -500, -300, -500, -300, -500, -300], [1000] * 8, [50] * 8)
+        self.ctrl.move_all_offset([-600, -400, -600, -400, -600, -400, -600, -400], [1000] * 8, [50] * 8)
 
     def go_forward(self):
+        """
+        电机1:大腿; 电机2:小腿
+        平行四边形结构约束,电机1与电机2转角一致时,腿部连杆关节角度不变,此时8dof可视为4dof
+        调整后摆稍稍降低, 消除4dof原点摩擦: 中点[-600,-400]，前摆[-400, -200]，后摆[-800, -650]
+        """
         spd_list = [2000] * 8
         acc_list = [50] * 8
-        period = 0.25
+        period = 0.2
 
-        # 后落地
-        self.ctrl.move_all_offset([-700, -600, -100, 0, -100, 0, -700, -600], spd_list, acc_list)
+        # G1前G2中
+        self.ctrl.move_all_offset([-400, -200, -600, -400, -600, -400, -400, -200], spd_list, acc_list)
         time.sleep(period)
-        self.ctrl.move_all_offset([-700, -600, -100, 0, -100, 0, -700, -600], spd_list, acc_list)
+        # G1前G2后
+        self.ctrl.move_all_offset([-400, -200, -800, -650, -800, -650, -400, -200], spd_list, acc_list)
         time.sleep(period)
-        # 后抬腿
-        self.ctrl.move_all_offset([-500, -600, -500, 0, -500, 0, -500, -600], spd_list, acc_list)
+        # G1中G2后
+        self.ctrl.move_all_offset([-600, -400, -800, -650, -800, -650, -600, -400], spd_list, acc_list)
         time.sleep(period)
-        # 前抬腿
-        self.ctrl.move_all_offset([-100, 0, -700, -600, -700, -600, -100, 0], spd_list, acc_list)
+        # G1中G2中
+        self.ctrl.move_all_offset([-600, -400, -600, -400, -600, -400, -600, -400], spd_list, acc_list)
         time.sleep(period)
-        self.ctrl.move_all_offset([-100, 0, -700, -600, -700, -600, -100, 0], spd_list, acc_list)
+
+        # G2前G1中
+        self.ctrl.move_all_offset([-600, -400, -400, -200, -400, -200, -600, -400], spd_list, acc_list)
         time.sleep(period)
-        # 前落地
-        self.ctrl.move_all_offset([-500, 0, -500, -600, -500, -600, -100, 0], spd_list, acc_list)
+        # G2前G1后
+        self.ctrl.move_all_offset([-800, -650, -400, -200, -400, -200, -800, -650], spd_list, acc_list)
+        time.sleep(period)
+        # G2中G1后
+        self.ctrl.move_all_offset([-800, -650, -600, -400, -600, -400, -800, -650], spd_list, acc_list)
+        time.sleep(period)
+        # G1中G2中
+        self.ctrl.move_all_offset([-600, -400, -600, -400, -600, -400, -600, -400], spd_list, acc_list)
         time.sleep(period)
 
     def go_left(self):
@@ -81,7 +95,7 @@ class ControllerDog8F:
         pass
 
 
-dog8f = ControllerDog8F(mode="serial", serial_port="COM15")
+dog8f = ControllerDog8F(mode="serial", serial_port="COM25")
 # dog8f = ControllerDog8F(mode="udp")
 dog8f.hardware_init()
 
