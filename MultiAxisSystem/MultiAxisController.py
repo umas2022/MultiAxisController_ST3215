@@ -157,7 +157,6 @@ class MultiAxisUSB(MultiAxisControllerInterface):
             if sts_error != 0:
                 print("%s" % self.packet_handler.getRxPacketError(sts_error))
         if len(offline_list) == 0:
-            print("All motors are online")
             return True
         else:
             print(f"Offline motors: {offline_list}")
@@ -345,7 +344,6 @@ class MultiAxisSerial(MultiAxisControllerInterface):
             if response[3] != 0x01:
                 offline_list.append(each_motor.id)
         if len(offline_list) == 0:
-            print("All motors online")
             return True
         else:
             print(f"Offline motors: {offline_list}")
@@ -550,7 +548,6 @@ class MultiAxisUdp(MultiAxisControllerInterface):
             if response[3] != 0x01:
                 offline_list.append(each_motor.id)
         if len(offline_list) == 0:
-            print("All motors online")
             return True
         else:
             print(f"Offline motors: {offline_list}")

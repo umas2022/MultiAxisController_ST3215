@@ -1,6 +1,6 @@
 """
-高频指令控制，电机运动
-狗
+高频指令控制
+狗12
 """
 
 import time
@@ -8,10 +8,10 @@ import csv
 import sys
 
 sys.path.append("..")
-from MultiAxisSystem.DogController import DogController
+from MultiAxisSystem.ControllerDog12F import ControllerDog12F
 
 # 初始化控制器
-test_agent = DogController(serial_port="COM14")
+test_agent = ControllerDog12F(mode="usb", serial_port="COM14")
 test_agent.hardware_init()
 
 # 在线检查
@@ -21,8 +21,6 @@ while True:
     if test_agent.online_check():
         print("All motors are online.")
         break
-    else:
-        print("Some motors are offline. Please check the connections.")
 
 # 参数设置
 record_frequency = 50  # 采集频率（Hz）
@@ -39,7 +37,7 @@ pos_list_stand = [0, -256, 256, 0, -256, 256, 0, -256, 256, 0, -256, 256]
 spd_list_stand = [1000] * 12
 acc_list_stand = [50] * 12
 
-test_agent.move_all_position_offset(pos_list_stand, spd_list_stand, acc_list_stand)
+test_agent.move_all_offset(pos_list_stand, spd_list_stand, acc_list_stand)
 
 time.sleep(2)
 
@@ -57,15 +55,15 @@ with open("LH_FOOT_5cm_0_5Hz.csv", "r", encoding="utf-8") as file:
 
         t0 = time.perf_counter()
 
-        test_agent.move_all_position_offset(pos_list, [1000] * 12, [50] * 12)  # 移动到目标位置
+        test_agent.move_all_offset(pos_list, [1000] * 12, [50] * 12)  # 移动到目标位置
 
         # 采集数据
-        positions = []
-        loads = []
-        tempers = []
-        # positions = test_agent.get_all_position_raw()
-        # loads = test_agent.get_all_load()
-        # tempers = test_agent.get_all_temper()
+        # positions = []
+        # loads = []
+        # tempers = []
+        positions = test_agent.get_all_position()
+        loads = test_agent.get_all_load()
+        tempers = test_agent.get_all_temper()
 
         # 计算采样时间
         t1 = time.perf_counter()
@@ -83,8 +81,8 @@ with open("LH_FOOT_5cm_0_5Hz.csv", "r", encoding="utf-8") as file:
 # 写入 CSV 文件
 with open("position_data.csv", mode="w", newline="") as file:
     writer = csv.writer(file)
-    header = ["Time", "Duration"] + [f"Motor_{i+1}" for i in range(7)]
+    header = ["Time", "Duration"] + [f"pos_{i+1}" for i in range(12)] + [f"load_{i+1}" for i in range(12)] + [f"temper_{i+1}" for i in range(12)]
     writer.writerow(header)
     writer.writerows(data_buffer)
 
-print("Data collection complete. Saved to position_data.csv")
+print("Data collection complete. Saved to hf_data.csv")

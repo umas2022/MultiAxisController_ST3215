@@ -3,34 +3,35 @@
 """
 
 import time
-import csv
 import sys
 
 sys.path.append("..")
 from MultiAxisSystem.ControllerArm import ControllerArm
 
 # 初始化控制器
-arm_master = ControllerArm(mode="usb", serial_port="COM12")
-arm_slave = ControllerArm(mode="usb", serial_port="COM4")
+arm_leader = ControllerArm(mode="usb", serial_port="COM12")
+arm_follower = ControllerArm(mode="usb", serial_port="COM4")
 
-arm_master.hardware_init()
-arm_slave.hardware_init()
+arm_leader.hardware_init()
+arm_follower.hardware_init()
+
 
 # 在线检查
 while True:
-    time.sleep(1)
-    print("online check ...")
-    if arm_master.online_check() and arm_slave.online_check():
-        print("All motors are online.")
+    print("leader arm online check ...")
+    leader_online = arm_leader.online_check()
+    print("follower arm online check ...")
+    follower_online = arm_follower.online_check()
+    if leader_online and follower_online:
         break
-    else:
-        print("Some motors are offline. Please check the connections.")
+    print("\n")
+    time.sleep(1)
 
 
-arm_slave.move_all_absolute(arm_master.get_all_position(), [500] * 7, [50] * 7)
+arm_follower.move_all_absolute(arm_leader.get_all_position(), [500] * 7, [50] * 7)
 print("Slave arm initialized to master position.")
 print("start sync ...")
 
 
 while True:
-    arm_slave.move_all_absolute(arm_master.get_all_position(), [2000] * 7, [0] * 7)
+    arm_follower.move_all_absolute(arm_leader.get_all_position(), [2000] * 7, [0] * 7)
