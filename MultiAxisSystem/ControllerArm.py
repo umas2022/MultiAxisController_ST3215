@@ -9,7 +9,10 @@ import sys
 sys.path.append("..")
 
 
-from MultiAxisSystem.MultiAxisController import MultiAxisUSB, MultiAxisSerial, MultiAxisUdp, MotorConfig
+from MultiAxisSystem.MultiAxisController import MotorConfig
+from MultiAxisSystem.MultiAxisControllerSerial import MultiAxisSerial
+from MultiAxisSystem.MultiAxisControllerUSB import MultiAxisUSB
+from MultiAxisSystem.MultiAxisControllerUDP import MultiAxisUdp
 
 
 class ControllerArm:
@@ -30,7 +33,7 @@ class ControllerArm:
             MotorConfig(id=4, min=0, max=4096, init=2048, reverse=False),
             MotorConfig(id=5, min=0, max=4096, init=2048, reverse=False),
             MotorConfig(id=6, min=0, max=4096, init=2048, reverse=False),
-            MotorConfig(id=7, min=0, max=4096, init=2048, reverse=False),
+            # MotorConfig(id=7, min=0, max=4096, init=2048, reverse=False),
         ]
 
     def hardware_init(self) -> bool:
@@ -58,7 +61,7 @@ class ControllerArm:
         return self.ctrl.get_all_temper()
 
 
-# # arm = ControllerArm(mode="usb", serial_port="COM4")
+# arm = ControllerArm(mode="usb", serial_port="COM25")
 # arm = ControllerArm(mode="udp")
 # arm.hardware_init()
 

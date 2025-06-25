@@ -3,6 +3,9 @@
 - 支持上位机usb直连电机，或通过有线串口、蓝牙串口、UDP连接esp32下位机控制电机
 - 配套esp32下位机：https://github.com/umas2022/MultiAxisHandler_ST3215
 
+```bash
+pip install pyserial
+```
 
 ## 项目结构
 
@@ -24,4 +27,3 @@
 
 ## 待办
 - 串口和udp返回消息没有校验
-- 8dof图纸中横梁与电路底板合并为一个零件；连杆关节稍紧

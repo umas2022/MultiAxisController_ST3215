@@ -3,6 +3,7 @@
 规定由折叠平躺到站立方向为正
 """
 
+import time
 import sys
 
 sys.path.append("..")
@@ -40,6 +41,8 @@ class ControllerDog12F:
             MotorConfig(id=22, min=0, max=4096, init=2048, reverse=True),
         ]
 
+        self.posture_stand = [0, -500, -1000] * 4  # 站立姿态
+
     def hardware_init(self) -> bool:
         return self.ctrl.hardware_init()
 
@@ -62,4 +65,42 @@ class ControllerDog12F:
         return self.ctrl.get_all_temper()
 
     def stand_up(self):
-        self.ctrl.move_all_offset([-500, -300, -500, -300, -500, -300, -500, -300], [1000] * 8, [50] * 8)
+        self.move_all_offset(
+            self.posture_stand,
+            [1000, 1000, 2000] * 12,
+            [50, 50, 100] * 12,
+        )
+
+    def hw_go_forward(self):
+        period = 0.5
+        pl_front = [0, -800, -1100]
+        pl_middle = [0, -500, -1000]
+        # lf + rf + lh + rh
+        self.move_all_offset(pl_middle + pl_middle + pl_middle + pl_middle, [1000] * 12, [100] * 12)
+        time.sleep(period)
+        self.move_all_offset(pl_front + pl_middle + pl_middle + pl_front, [1000] * 12, [100] * 12)
+        time.sleep(period)
+        self.move_all_offset(pl_front + pl_front + pl_front + pl_front, [1000] * 12, [100] * 12)
+        time.sleep(period)
+        self.move_all_offset(pl_middle + pl_front + pl_front + pl_middle, [1000] * 12, [100] * 12)
+        time.sleep(period)
+
+
+# test_agent = ControllerDog12F(mode="serial", serial_port="COM20")
+# test_agent.hardware_init()
+
+# test_agent.online_check()
+# time.sleep(1)
+
+# while True:
+#     print(test_agent.get_all_position())
+#     time.sleep(1)
+
+# test_agent.move_all_init(1000, 50)
+# time.sleep(1)
+
+# test_agent.stand_up()
+# time.sleep(1)
+
+# while True:
+#     test_agent.hw_go_forward()
