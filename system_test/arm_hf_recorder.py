@@ -13,7 +13,8 @@ from MultiAxisSystem.ControllerArm import ControllerArm
 
 
 # 初始化控制器
-test_agent = ControllerArm(serial_port="COM26", mode="serial")
+# test_agent = ControllerArm(serial_port="COM16", mode="serial")
+test_agent = ControllerArm(mode="udp")
 test_agent.hardware_init()
 
 # 在线检查
@@ -69,10 +70,10 @@ for current_step in range(total_step):  # 共采集 100 次
     positions = []
     loads = []
     tempers = []
-    # positions = test_agent.get_all_position()
+    positions = test_agent.get_all_position()
     # loads = test_agent.get_all_load()
     # tempers = test_agent.get_all_temper()
-    positions, loads, tempers = test_agent.ctrl.get_all_position_load_temper()
+    # positions, loads, tempers = test_agent.ctrl.get_all_position_load_temper()
 
     # 计算采样时间
     t1 = time.perf_counter()

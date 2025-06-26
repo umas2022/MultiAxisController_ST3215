@@ -22,6 +22,10 @@ CMD_MOVE_SPD_ACC = 0x05
 CMD_GET_POS = 0x06
 CMD_GET_LOAD = 0x07
 CMD_GET_TEMP = 0x08
+CMD_GET_POS_ALL = 0x09
+CMD_GET_LOAD_ALL = 0x10
+CMD_GET_TEMP_ALL = 0x11
+CMD_GET_POS_LOAD_TEMP_ALL = 0x12
 
 
 class MultiAxisUdp(MultiAxisControllerInterface):
@@ -166,56 +170,116 @@ class MultiAxisUdp(MultiAxisControllerInterface):
         # UDP协议不需要额外的执行命令，直接发送命令即可
         pass
 
-    def get_all_position(self) -> list:
+    def get_all_position(self):
         pos_list = []
-        for each_motor in self.motors_list:
-            self.send_byte_command([CMD_GET_POS, 0x01, int(each_motor.id)])
-            response = self.get_response(CMD_GET_POS)
+        motor_count = len(self.motors_list)
+        id_list = [int(each_motor.id) for each_motor in self.motors_list]
+        self.send_byte_command([CMD_GET_POS_ALL, motor_count] + id_list)
+        response = self.get_response(CMD_GET_POS_ALL)
+        for i in range(motor_count):
             try:
-                pos_high = response[3]
-                pos_low = response[4]
+                pos_high = response[3 + i * 2]
+                pos_low = response[4 + i * 2]
                 pos = (pos_high << 8) + pos_low
                 pos_list.append(pos)
             except Exception as e:
-                print(f"Motor {each_motor.id} response error: {e}")
+                print(f"Motor {self.motors_list[i].id} response error: {e}")
                 pos_list.append(0)
-                continue
         return pos_list
 
-    def get_all_load(self) -> list:
+    def get_all_load(self):
         load_list = []
-        for each_motor in self.motors_list:
-            self.send_byte_command([CMD_GET_LOAD, 0x01, int(each_motor.id)])
-            response = self.get_response(CMD_GET_LOAD)
+        motor_count = len(self.motors_list)
+        id_list = [int(each_motor.id) for each_motor in self.motors_list]
+        self.send_byte_command([CMD_GET_LOAD_ALL, motor_count] + id_list)
+        response = self.get_response(CMD_GET_LOAD_ALL)
+        for i in range(motor_count):
             try:
-                sign = response[3]
-                load_high = response[4]
-                load_low = response[5]
+                sign = response[3 + i * 3]
+                load_high = response[4 + i * 3]
+                load_low = response[5 + i * 3]
                 load = (load_high << 8) + load_low
                 if sign == 0x01:
                     load = -load
                 load_list.append(load)
             except Exception as e:
-                print(f"Motor {each_motor.id} response error: {e}")
+                print(f"Motor {self.motors_list[i].id} response error: {e}")
                 load_list.append(0)
-                continue
         return load_list
 
-    def get_all_temper(self) -> list:
+    def get_all_temper(self):
         temper_list = []
-        for each_motor in self.motors_list:
-            self.send_byte_command([CMD_GET_TEMP, 0x01, int(each_motor.id)])
-            response = self.get_response(CMD_GET_TEMP)
+        motor_count = len(self.motors_list)
+        id_list = [int(each_motor.id) for each_motor in self.motors_list]
+        self.send_byte_command([CMD_GET_TEMP_ALL, motor_count] + id_list)
+        response = self.get_response(CMD_GET_TEMP_ALL)
+        for i in range(motor_count):
             try:
-                temper_high = response[3]
-                temper_low = response[4]
-                pos = (temper_high << 8) + temper_low
-                temper_list.append(pos)
+                temper_high = response[3 + i * 2]
+                temper_low = response[4 + i * 2]
+                temper = (temper_high << 8) + temper_low
+                temper_list.append(temper)
             except Exception as e:
-                print(f"Motor {each_motor.id} response error: {e}")
+                print(f"Motor {self.motors_list[i].id} response error: {e}")
                 temper_list.append(0)
-                continue
         return temper_list
+
+    def get_all_position_load_temper(self) -> tuple:
+        """
+        获取所有电机位置、负载和温度（修正版）
+        :return: (positions, loads, tempers)
+        """
+        if not self.motors_list:
+            return ([], [], [])
+
+        motor_count = len(self.motors_list)
+        id_list = [int(motor.id) for motor in self.motors_list]
+
+        # 发送请求
+        self.send_byte_command([CMD_GET_POS_LOAD_TEMP_ALL, motor_count] + id_list)
+
+        # 获取响应
+        response = self.get_response(CMD_GET_POS_LOAD_TEMP_ALL, timeout=0.5)
+        if not response:
+            print("获取数据超时")
+            return ([0] * motor_count, [0] * motor_count, [0] * motor_count)
+
+        # 检查数据长度 (帧头1 + CMD1 + 长度1 + 数据n + 校验和1)
+        expected_len = 3 + motor_count * 7 + 1
+        if len(response) != expected_len:
+            print(f"数据长度错误，期望{expected_len}，实际{len(response)}")
+            return ([0] * motor_count, [0] * motor_count, [0] * motor_count)
+
+        pos_list = []
+        load_list = []
+        temper_list = []
+
+        for i in range(motor_count):
+            try:
+                base = 3 + i * 7  # 跳过帧头(0xAA)、CMD和长度字节
+
+                # 解析位置 (2字节)
+                pos = (response[base] << 8) | response[base + 1]
+
+                # 解析负载 (3字节: 符号1 + 值2)
+                sign = response[base + 2]
+                load = (response[base + 3] << 8) | response[base + 4]
+                if sign == 0x01:
+                    load = -load
+
+                # 解析温度 (2字节)
+                temper = (response[base + 5] << 8) | response[base + 6]
+
+                pos_list.append(pos)
+                load_list.append(load)
+                temper_list.append(temper)
+
+            except Exception as e:
+                print(f"Motor {self.motors_list[i].id} 解析错误: {e}")
+                pos_list.append(0)
+                load_list.append(0)
+                temper_list.append(0)
+        return pos_list, load_list, temper_list
 
     def move_all_init(self, spd, acc) -> None:
         for each_motor in self.motors_list:
