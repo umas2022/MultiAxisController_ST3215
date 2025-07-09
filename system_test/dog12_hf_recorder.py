@@ -76,12 +76,13 @@ with open(step_import_csv, "r", encoding="utf-8") as file:
         test_agent.move_all_offset(offset_list, [1000] * 12, [50] * 12)  # 移动到目标位置
 
         # 采集数据
-        # positions = []
-        # loads = []
-        # tempers = []
-        positions = test_agent.get_all_position()
-        loads = test_agent.get_all_load()
-        tempers = test_agent.get_all_temper()
+        positions = []
+        loads = []
+        tempers = []
+        # positions = test_agent.get_all_position()
+        # loads = test_agent.get_all_load()
+        # tempers = test_agent.get_all_temper()
+        positions, loads, tempers = test_agent.ctrl.get_all_position_load_temper()
 
         # 计算采样时间
         t1 = time.perf_counter()

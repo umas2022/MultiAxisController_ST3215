@@ -7,7 +7,10 @@ import time
 import sys
 
 sys.path.append("..")
-from MultiAxisSystem.MultiAxisController import MultiAxisUSB, MultiAxisSerial, MultiAxisUdp, MotorConfig
+from MultiAxisSystem.MultiAxisController import MotorConfig
+from MultiAxisSystem.MultiAxisControllerSerial import MultiAxisSerial
+from MultiAxisSystem.MultiAxisControllerUSB import MultiAxisUSB
+from MultiAxisSystem.MultiAxisControllerUDP import MultiAxisUdp
 
 
 class ControllerDog8F:

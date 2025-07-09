@@ -4,7 +4,7 @@
 - 配套esp32下位机：https://github.com/umas2022/MultiAxisHandler_ST3215
 
 ```bash
-pip install pyserial
+pip install -r requirements.txt
 ```
 
 ## 项目结构
