@@ -19,7 +19,7 @@ pip install -r requirements.txt
   - sdk附带的example，未来会删掉
 
 - system_test/
-  - 硬件系统性能测试脚本
+  - 硬件性能测试脚本
 
 - toolbox/
   - 基于MultiAxisSystem的调试工具包

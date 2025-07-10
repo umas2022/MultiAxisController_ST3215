@@ -63,14 +63,15 @@ class ControllerArm:
         return self.ctrl.get_all_temper()
 
 
-# arm = ControllerArm(mode="usb", serial_port="COM4")
-# # arm = ControllerArm(mode="udp")
-# arm.hardware_init()
+if __name__ == "__main__":
+    # Example usage
+    arm = ControllerArm(mode="usb", serial_port="COM4")
+    arm.hardware_init()
 
-# print("online_check")
-# while not arm.online_check():
-#     time.sleep(1)
+    print("online_check")
+    while not arm.online_check():
+        time.sleep(1)
 
-# while True:
-#     print(arm.get_all_position())
-#     time.sleep(1)
+    while True:
+        print(arm.get_all_position())
+        time.sleep(1)

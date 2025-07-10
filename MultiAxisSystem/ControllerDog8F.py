@@ -99,23 +99,27 @@ class ControllerDog8F:
         pass
 
 
-dog8f = ControllerDog8F(mode="serial", serial_port="COM25")
-# dog8f = ControllerDog8F(mode="udp")
-dog8f.hardware_init()
+if __name__ == "__main__":
+    # Example usage
+    dog8f = ControllerDog8F(mode="usb", serial_port="COM28")
+    # dog8f = ControllerDog8F(mode="serial", serial_port="COM25")
+    # dog8f = ControllerDog8F(mode="udp")
+    dog8f.hardware_init()
 
-print("online_check")
-dog8f.ctrl.online_check()
+    print("online_check")
+    while not dog8f.online_check():
+        time.sleep(1)
 
-print("move_all_init")
-dog8f.move_all_init(1000, 50)
-time.sleep(2)
+    print("move_all_init")
+    dog8f.move_all_init(1000, 50)
+    time.sleep(2)
 
-print("stand up")
-dog8f.stand_up()
-time.sleep(2)
+    print("stand up")
+    dog8f.stand_up()
+    time.sleep(2)
 
-print("move test")
-while True:
-    dog8f.go_forward()
-    # dog8f.go_left()
-    # dog8f.go_right()
+    print("move test")
+    while True:
+        dog8f.go_forward()
+        # dog8f.go_left()
+        # dog8f.go_right()

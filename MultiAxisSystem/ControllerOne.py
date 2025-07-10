@@ -7,7 +7,10 @@ import sys
 
 sys.path.append("..")
 
-from MultiAxisSystem.MultiAxisController import MultiAxisUSB, MultiAxisSerial, MultiAxisUdp, MotorConfig
+from MultiAxisSystem.MultiAxisController import MotorConfig
+from MultiAxisSystem.MultiAxisControllerSerial import MultiAxisSerial
+from MultiAxisSystem.MultiAxisControllerUSB import MultiAxisUSB
+from MultiAxisSystem.MultiAxisControllerUDP import MultiAxisUdp
 
 
 class ControllerOne:
@@ -22,7 +25,7 @@ class ControllerOne:
             raise ValueError("Unknown mode")
 
         self.ctrl.motors_list = [
-            MotorConfig(id=1, min=0, max=4096, init=2048, reverse=False),
+            MotorConfig(id=7, min=0, max=4096, init=2048, reverse=False),
         ]
 
     def hardware_init(self) -> bool:
@@ -50,27 +53,29 @@ class ControllerOne:
         return self.ctrl.get_all_temper()
 
 
-# # agent = ControllerOne(mode="serial", serial_port="COM15")
-# agent = ControllerOne(mode="udp")
-# agent.hardware_init()
+if __name__ == "__main__":
+    # 示例用法
+    agent = ControllerOne(mode="serial", serial_port="COM15")
+    # agent = ControllerOne(mode="usb", serial_port="COM28")
+    # # agent = ControllerOne(mode="udp")
+    agent.hardware_init()
 
-# print("online_check")
-# agent.ctrl.online_check()
+    print("online_check")
+    agent.ctrl.online_check()
 
-# print("move_all_init")
-# agent.move_all_init(1000, 50)
-# time.sleep(2)
+    print("move_all_init")
+    agent.move_all_init(1000, 50)
+    time.sleep(2)
 
-# print("move test")
-# agent.move_all_offset([1024], [1000], [50])
-# time.sleep(2)
+    print("move test")
+    agent.move_all_offset([1024], [1000], [50])
+    time.sleep(2)
 
-# print("get_all_position")
-# print(agent.get_all_position())
+    # print("get_all_position")
+    # print(agent.get_all_position())
 
-# print("get_all_load")
-# print(agent.get_all_load())
+    # print("get_all_load")
+    # print(agent.get_all_load())
 
-
-# print("get_all_temper")
-# print(agent.get_all_temper())
+    # print("get_all_temper")
+    # print(agent.get_all_temper())

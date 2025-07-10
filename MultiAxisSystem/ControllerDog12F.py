@@ -27,21 +27,37 @@ class ControllerDog12F:
 
         self.ctrl.motors_list = [
             # LF
-            MotorConfig(id=11, min=0, max=4096, init=2048, reverse=False),
-            MotorConfig(id=12, min=0, max=4096, init=2048, reverse=True),
-            MotorConfig(id=13, min=0, max=4096, init=2048, reverse=True),
+            MotorConfig(id=1, min=0, max=4096, init=2048, reverse=False),
+            MotorConfig(id=2, min=0, max=4096, init=2048, reverse=True),
+            MotorConfig(id=3, min=0, max=4096, init=2048, reverse=True),
             # RF
-            MotorConfig(id=14, min=0, max=4096, init=2048, reverse=True),
-            MotorConfig(id=15, min=0, max=4096, init=2048, reverse=False),
-            MotorConfig(id=16, min=0, max=4096, init=2048, reverse=False),
+            MotorConfig(id=4, min=0, max=4096, init=2048, reverse=True),
+            MotorConfig(id=5, min=0, max=4096, init=2048, reverse=False),
+            MotorConfig(id=6, min=0, max=4096, init=2048, reverse=False),
             # LH
-            MotorConfig(id=17, min=0, max=4096, init=2048, reverse=True),
-            MotorConfig(id=18, min=0, max=4096, init=2048, reverse=False),
-            MotorConfig(id=19, min=0, max=4096, init=2048, reverse=False),
+            MotorConfig(id=7, min=0, max=4096, init=2048, reverse=True),
+            MotorConfig(id=8, min=0, max=4096, init=2048, reverse=False),
+            MotorConfig(id=9, min=0, max=4096, init=2048, reverse=False),
             # RH
-            MotorConfig(id=20, min=0, max=4096, init=2048, reverse=False),
-            MotorConfig(id=21, min=0, max=4096, init=2048, reverse=True),
-            MotorConfig(id=22, min=0, max=4096, init=2048, reverse=True),
+            MotorConfig(id=10, min=0, max=4096, init=2048, reverse=False),
+            MotorConfig(id=11, min=0, max=4096, init=2048, reverse=True),
+            MotorConfig(id=12, min=0, max=4096, init=2048, reverse=True),
+            # # LF
+            # MotorConfig(id=11, min=0, max=4096, init=2048, reverse=False),
+            # MotorConfig(id=12, min=0, max=4096, init=2048, reverse=True),
+            # MotorConfig(id=13, min=0, max=4096, init=2048, reverse=True),
+            # # RF
+            # MotorConfig(id=14, min=0, max=4096, init=2048, reverse=True),
+            # MotorConfig(id=15, min=0, max=4096, init=2048, reverse=False),
+            # MotorConfig(id=16, min=0, max=4096, init=2048, reverse=False),
+            # # LH
+            # MotorConfig(id=17, min=0, max=4096, init=2048, reverse=True),
+            # MotorConfig(id=18, min=0, max=4096, init=2048, reverse=False),
+            # MotorConfig(id=19, min=0, max=4096, init=2048, reverse=False),
+            # # RH
+            # MotorConfig(id=20, min=0, max=4096, init=2048, reverse=False),
+            # MotorConfig(id=21, min=0, max=4096, init=2048, reverse=True),
+            # MotorConfig(id=22, min=0, max=4096, init=2048, reverse=True),
         ]
 
         self.posture_stand = [0, -500, -1000] * 4  # 站立姿态
@@ -74,7 +90,7 @@ class ControllerDog12F:
             [50, 50, 100] * 12,
         )
 
-    def hw_go_forward(self):
+    def move_test(self):
         period = 0.5
         pl_front = [0, -800, -1100]
         pl_middle = [0, -500, -1000]
@@ -89,21 +105,27 @@ class ControllerDog12F:
         time.sleep(period)
 
 
-# test_agent = ControllerDog12F(mode="serial", serial_port="COM20")
-# test_agent.hardware_init()
+if __name__ == "__main__":
+    # Example usage
+    test_agent = ControllerDog12F(mode="usb", serial_port="COM28")
 
-# test_agent.online_check()
-# time.sleep(1)
+    print("hardware init ...")
+    test_agent.hardware_init()
 
-# while True:
-#     print(test_agent.get_all_position())
-#     time.sleep(1)
+    print("online check ...")
+    while True:
+        if test_agent.online_check():
+            break
+        time.sleep(1)
 
-# test_agent.move_all_init(1000, 50)
-# time.sleep(1)
+    print("position init ...")
+    test_agent.move_all_init(1000, 50)
+    time.sleep(1)
 
-# test_agent.stand_up()
-# time.sleep(1)
+    print("stand up ...")
+    test_agent.stand_up()
+    time.sleep(1)
 
-# while True:
-#     test_agent.hw_go_forward()
+    while True:
+        print(test_agent.get_all_position())
+        time.sleep(1)
