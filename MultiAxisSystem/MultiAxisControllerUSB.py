@@ -106,6 +106,20 @@ class MultiAxisUSB(MultiAxisControllerInterface):
                 return []
         return pos_list
 
+    def get_all_speed(self) -> list:
+        speed_list = []
+        for each_motor in self.motors_list:
+            sts_present_speed, sts_comm_result, sts_error = self.packet_handler.ReadSpeed(each_motor.id)
+            if sts_comm_result != COMM_SUCCESS:
+                print(f"Motor {each_motor.id} is offline")
+                return []
+            else:
+                speed_list.append(sts_present_speed)
+            if sts_error != 0:
+                print("%s" % self.packet_handler.getRxPacketError(sts_error))
+                return []
+        return speed_list
+
     def get_all_load(self) -> list:
         load_list = []
         for each_motor in self.motors_list:
@@ -133,6 +147,9 @@ class MultiAxisUSB(MultiAxisControllerInterface):
                 print("%s" % self.packet_handler.getRxPacketError(sts_error))
                 return []
         return temper_list
+
+    def get_all_position_load_temper(self) -> tuple:
+        return self.get_all_position(), self.get_all_load(), self.get_all_temper()
 
     def move_all_absolute(self, pos_list: list, spd_list: list, acc_list: list) -> None:
         for i, each_motor in enumerate(self.motors_list):

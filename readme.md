@@ -27,3 +27,4 @@ pip install -r requirements.txt
 
 ## 待办
 - 串口和udp返回消息没有校验
+- get_all_speed函数只完成了usb实现，serial和udp还没写

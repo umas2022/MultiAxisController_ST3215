@@ -83,6 +83,9 @@ class ControllerDog12F:
     def get_all_temper(self) -> list:
         return self.ctrl.get_all_temper()
 
+    def get_all_speed(self) -> list:
+        return self.ctrl.get_all_speed()
+
     def stand_up(self):
         self.move_all_offset(
             self.posture_stand,
