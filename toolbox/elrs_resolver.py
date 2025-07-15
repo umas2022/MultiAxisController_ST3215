@@ -1,3 +1,7 @@
+"""
+elrs接收机16通道串口数据解析
+"""
+
 import serial
 import time
 

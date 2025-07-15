@@ -14,10 +14,8 @@ from MultiAxisSystem.ControllerDog12F import ControllerDog12F
 
 
 # csv路径
-# csv_import_dir = Path(r"D:\workspace_local\ws_code\self\MultiAxisController_ST3215\system_test\test_data")
-# csv_output_dir = Path(r"D:\workspace_local\ws_code\self\MultiAxisController_ST3215\system_test\test_output")
-csv_import_dir = Path(r"D:\workspace_active\diy003_servo_dog_12dof\analysis\ik_csv")
-csv_output_dir = Path(r"D:\workspace_active\diy003_servo_dog_12dof\analysis\ik_csv_output")
+csv_import_dir = Path(r"D:\workspace_active\diy003_servo_dog_12dof\analysis\ik_csv_merge")
+csv_output_dir = Path(r"D:\workspace_active\diy003_servo_dog_12dof\analysis\ik_csv_merge_output")
 csv_output_dir.mkdir(parents=True, exist_ok=True)
 csv_files = list(csv_import_dir.glob("*.csv"))
 total_files = len(csv_files)

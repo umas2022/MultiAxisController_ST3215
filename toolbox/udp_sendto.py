@@ -1,3 +1,7 @@
+"""
+udp消息发送（到esp32）
+"""
+
 import socket
 
 # ESP32 的默认 IP 是 192.168.4.1（SoftAP 模式下）

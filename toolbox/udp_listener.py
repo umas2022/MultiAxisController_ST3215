@@ -1,3 +1,7 @@
+"""
+udp消息监听（自esp32）
+"""
+
 import socket
 
 esp32_ip = "192.168.4.1"
