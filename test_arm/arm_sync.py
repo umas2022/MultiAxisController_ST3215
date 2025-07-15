@@ -9,8 +9,8 @@ sys.path.append("..")
 from MultiAxisSystem.ControllerArm import ControllerArm
 
 # 初始化控制器
-arm_leader = ControllerArm(mode="usb", serial_port="COM12")
-arm_follower = ControllerArm(mode="usb", serial_port="COM4")
+arm_leader = ControllerArm(mode="usb", serial_port="COM29" "")
+arm_follower = ControllerArm(mode="usb", serial_port="COM30")
 
 arm_leader.hardware_init()
 arm_follower.hardware_init()

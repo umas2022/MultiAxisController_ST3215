@@ -1,3 +1,8 @@
+"""
+dog12_hf_recorder.py记录了反馈速度，观察到反馈速度存在误差
+此脚本根据反馈位置和时间计算速度，补充到csv文件尾部
+"""
+
 import pandas as pd
 import numpy as np
 
