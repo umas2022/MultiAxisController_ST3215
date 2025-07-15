@@ -87,7 +87,7 @@ class MultiAxisUSB(MultiAxisControllerInterface):
     def move_excute(self) -> None:
         self.packet_handler.RegAction()
 
-    def move_all_init(self, spd, acc) -> None:
+    def move_all_init(self, spd: int, acc: int) -> None:
         for each_motor in self.motors_list:
             self.move_to_absolute(each_motor, each_motor.init, spd, acc)
         self.move_excute()

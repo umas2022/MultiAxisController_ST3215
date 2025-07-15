@@ -68,11 +68,17 @@ class ControllerDog12F:
     def online_check(self) -> bool:
         return self.ctrl.online_check()
 
-    def move_all_init(self, spd, acc) -> None:
+    def move_all_init(self, spd: int, acc: int) -> None:
         self.ctrl.move_all_init(spd, acc)
 
-    def move_all_offset(self, offset, spd, acc) -> None:
+    def move_all_offset(self, offset: list, spd: list, acc: list) -> None:
+        """绝对零点位移，offset为相对零点的位移量"""
         self.ctrl.move_all_offset(offset, spd, acc)
+
+    def move_all_offset_from_stand(self, offset: list, spd: list, acc: list) -> None:
+        """相对站立姿态的位移，offset为相对站立姿态的位移量"""
+        offset_list = [x + y for x, y in zip(offset, self.posture_stand)]
+        self.ctrl.move_all_offset(offset_list, spd, acc)
 
     def get_all_position(self) -> list:
         return self.ctrl.get_all_position()
@@ -85,13 +91,6 @@ class ControllerDog12F:
 
     def get_all_speed(self) -> list:
         return self.ctrl.get_all_speed()
-
-    def stand_up(self):
-        self.move_all_offset(
-            self.posture_stand,
-            [1000, 1000, 2000] * 12,
-            [50, 50, 100] * 12,
-        )
 
     def move_test(self):
         period = 0.5
@@ -126,9 +125,10 @@ if __name__ == "__main__":
     time.sleep(1)
 
     print("stand up ...")
-    test_agent.stand_up()
+    test_agent.move_all_offset_from_stand([0] * 12, [1000] * 12, [50] * 12)
     time.sleep(1)
 
-    while True:
-        print(test_agent.get_all_position())
-        time.sleep(1)
+    # # 监听位置
+    # while True:
+    #     print(test_agent.get_all_position())
+    #     time.sleep(1)

@@ -281,7 +281,7 @@ class MultiAxisUdp(MultiAxisControllerInterface):
                 temper_list.append(0)
         return pos_list, load_list, temper_list
 
-    def move_all_init(self, spd, acc) -> None:
+    def move_all_init(self, spd: int, acc: int) -> None:
         for each_motor in self.motors_list:
             self.move_to_absolute(each_motor, each_motor.init, spd, acc)
         self.move_excute()
