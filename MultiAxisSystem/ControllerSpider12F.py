@@ -1,5 +1,5 @@
 """
-4足机器人，12自由度，直连
+4足机器人，12自由度，直连，肩关节平行z轴，蜘蛛布局
 规定由折叠平躺到站立方向为正
 注意由于下位机串口硬件限制消息长度，超过8个电机的系统不可调用get_all_position_load_temper函数
 """
@@ -15,7 +15,7 @@ from MultiAxisSystem.MultiAxisControllerUSB import MultiAxisUSB
 from MultiAxisSystem.MultiAxisControllerUDP import MultiAxisUdp
 
 
-class ControllerDog12F:
+class ControllerSpider12F:
     def __init__(self, mode="usb", serial_port=None):
         if mode == "usb":
             self.ctrl = MultiAxisUSB(serial_port)
@@ -43,22 +43,6 @@ class ControllerDog12F:
             MotorConfig(id=10, min=0, max=4096, init=2048, reverse=False),
             MotorConfig(id=11, min=0, max=4096, init=2048, reverse=True),
             MotorConfig(id=12, min=0, max=4096, init=2048, reverse=True),
-            # # LF
-            # MotorConfig(id=11, min=0, max=4096, init=2048, reverse=False),
-            # MotorConfig(id=12, min=0, max=4096, init=2048, reverse=False),
-            # MotorConfig(id=13, min=0, max=4096, init=2048, reverse=False),
-            # # RF
-            # MotorConfig(id=14, min=0, max=4096, init=2048, reverse=True),
-            # MotorConfig(id=15, min=0, max=4096, init=2048, reverse=True),
-            # MotorConfig(id=16, min=0, max=4096, init=2048, reverse=True),
-            # # LH
-            # MotorConfig(id=17, min=0, max=4096, init=2048, reverse=False),
-            # MotorConfig(id=18, min=0, max=4096, init=2048, reverse=True),
-            # MotorConfig(id=19, min=0, max=4096, init=2048, reverse=True),
-            # # RH
-            # MotorConfig(id=20, min=0, max=4096, init=2048, reverse=True),
-            # MotorConfig(id=21, min=0, max=4096, init=2048, reverse=False),
-            # MotorConfig(id=22, min=0, max=4096, init=2048, reverse=False),
         ]
 
         self.posture_stand = [0, int(4096 / 6), int(4096 / 4)] * 4  # 站立姿态
@@ -110,8 +94,8 @@ class ControllerDog12F:
 
 if __name__ == "__main__":
     # Example usage
-    test_agent = ControllerDog12F(mode="usb", serial_port="COM12")
-    # test_agent = ControllerDog12F(mode="serial", serial_port="COM17")
+    test_agent = ControllerSpider12F(mode="usb", serial_port="COM12")
+    # test_agent = ControllerSpider12F(mode="serial", serial_port="COM17")
 
     print("hardware init ...")
     test_agent.hardware_init()
@@ -126,9 +110,9 @@ if __name__ == "__main__":
     test_agent.move_all_init(1000, 50)
     time.sleep(1)
 
-    print("stand up ...")
-    test_agent.move_all_offset_from_stand([0] * 12, [1000] * 12, [50] * 12)
-    time.sleep(1)
+    # print("stand up ...")
+    # test_agent.move_all_offset_from_stand([0] * 12, [1000] * 12, [50] * 12)
+    # time.sleep(1)
 
     # 监听位置
     while True:

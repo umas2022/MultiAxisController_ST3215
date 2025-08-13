@@ -221,17 +221,20 @@ class MultiAxisSerial(MultiAxisControllerInterface):
 
     def get_all_position_load_temper(self) -> tuple:
         """
-        获取所有电机位置、负载和温度（修正版）
+        获取所有电机位置、负载和温度
         :return: (positions, loads, tempers)
+        注意由于esp32硬件FIFO限制，串口消息长度最大64（8个电机），超出8个电机时需要分批获取
         """
         if not self.motors_list:
             return ([], [], [])
 
         motor_count = len(self.motors_list)
         id_list = [int(motor.id) for motor in self.motors_list]
+        cmd_list = [CMD_GET_POS_LOAD_TEMP_ALL, motor_count] + id_list
+        print(f"Sending command: {cmd_list}")
 
         # 发送请求
-        self.send_byte_command([CMD_GET_POS_LOAD_TEMP_ALL, motor_count] + id_list)
+        self.send_byte_command(cmd_list)
 
         # 获取响应
         response = self.get_response(CMD_GET_POS_LOAD_TEMP_ALL, timeout=0.5)
@@ -243,6 +246,7 @@ class MultiAxisSerial(MultiAxisControllerInterface):
         expected_len = 3 + motor_count * 7 + 1
         if len(response) != expected_len:
             print(f"数据长度错误，期望{expected_len}，实际{len(response)}")
+            print("响应数据:", response)
             return ([0] * motor_count, [0] * motor_count, [0] * motor_count)
 
         pos_list = []
