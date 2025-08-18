@@ -27,38 +27,38 @@ class ControllerDog12F:
             raise ValueError("Unknown mode")
 
         self.ctrl.motors_list = [
-            # LF
-            MotorConfig(id=1, min=0, max=4096, init=2048, reverse=False),
-            MotorConfig(id=2, min=0, max=4096, init=2048, reverse=True),
-            MotorConfig(id=3, min=0, max=4096, init=2048, reverse=True),
-            # RF
-            MotorConfig(id=4, min=0, max=4096, init=2048, reverse=True),
-            MotorConfig(id=5, min=0, max=4096, init=2048, reverse=False),
-            MotorConfig(id=6, min=0, max=4096, init=2048, reverse=False),
-            # LH
-            MotorConfig(id=7, min=0, max=4096, init=2048, reverse=True),
-            MotorConfig(id=8, min=0, max=4096, init=2048, reverse=False),
-            MotorConfig(id=9, min=0, max=4096, init=2048, reverse=False),
-            # RH
-            MotorConfig(id=10, min=0, max=4096, init=2048, reverse=False),
-            MotorConfig(id=11, min=0, max=4096, init=2048, reverse=True),
-            MotorConfig(id=12, min=0, max=4096, init=2048, reverse=True),
             # # LF
-            # MotorConfig(id=11, min=0, max=4096, init=2048, reverse=False),
-            # MotorConfig(id=12, min=0, max=4096, init=2048, reverse=False),
-            # MotorConfig(id=13, min=0, max=4096, init=2048, reverse=False),
+            # MotorConfig(id=1, min=0, max=4096, init=2048, reverse=False),
+            # MotorConfig(id=2, min=0, max=4096, init=2048, reverse=True),
+            # MotorConfig(id=3, min=0, max=4096, init=2048, reverse=True),
             # # RF
-            # MotorConfig(id=14, min=0, max=4096, init=2048, reverse=True),
-            # MotorConfig(id=15, min=0, max=4096, init=2048, reverse=True),
-            # MotorConfig(id=16, min=0, max=4096, init=2048, reverse=True),
+            # MotorConfig(id=4, min=0, max=4096, init=2048, reverse=True),
+            # MotorConfig(id=5, min=0, max=4096, init=2048, reverse=False),
+            # MotorConfig(id=6, min=0, max=4096, init=2048, reverse=False),
             # # LH
-            # MotorConfig(id=17, min=0, max=4096, init=2048, reverse=False),
-            # MotorConfig(id=18, min=0, max=4096, init=2048, reverse=True),
-            # MotorConfig(id=19, min=0, max=4096, init=2048, reverse=True),
+            # MotorConfig(id=7, min=0, max=4096, init=2048, reverse=True),
+            # MotorConfig(id=8, min=0, max=4096, init=2048, reverse=False),
+            # MotorConfig(id=9, min=0, max=4096, init=2048, reverse=False),
             # # RH
-            # MotorConfig(id=20, min=0, max=4096, init=2048, reverse=True),
-            # MotorConfig(id=21, min=0, max=4096, init=2048, reverse=False),
-            # MotorConfig(id=22, min=0, max=4096, init=2048, reverse=False),
+            # MotorConfig(id=10, min=0, max=4096, init=2048, reverse=False),
+            # MotorConfig(id=11, min=0, max=4096, init=2048, reverse=True),
+            # MotorConfig(id=12, min=0, max=4096, init=2048, reverse=True),
+            # LF
+            MotorConfig(id=11, min=0, max=4096, init=2048, reverse=False),
+            MotorConfig(id=12, min=0, max=4096, init=2048, reverse=False),
+            MotorConfig(id=13, min=0, max=4096, init=2048, reverse=False),
+            # RF
+            MotorConfig(id=14, min=0, max=4096, init=2048, reverse=True),
+            MotorConfig(id=15, min=0, max=4096, init=2048, reverse=True),
+            MotorConfig(id=16, min=0, max=4096, init=2048, reverse=True),
+            # LH
+            MotorConfig(id=17, min=0, max=4096, init=2048, reverse=False),
+            MotorConfig(id=18, min=0, max=4096, init=2048, reverse=True),
+            MotorConfig(id=19, min=0, max=4096, init=2048, reverse=True),
+            # RH
+            MotorConfig(id=20, min=0, max=4096, init=2048, reverse=True),
+            MotorConfig(id=21, min=0, max=4096, init=2048, reverse=False),
+            MotorConfig(id=22, min=0, max=4096, init=2048, reverse=False),
         ]
 
         self.posture_stand = [0, int(4096 / 6), int(4096 / 4)] * 4  # 站立姿态
@@ -110,7 +110,8 @@ class ControllerDog12F:
 
 if __name__ == "__main__":
     # Example usage
-    test_agent = ControllerDog12F(mode="usb", serial_port="COM12")
+    test_agent = ControllerDog12F(mode="usb", serial_port="/dev/ttyACM0")
+    # test_agent = ControllerDog12F(mode="usb", serial_port="COM12")
     # test_agent = ControllerDog12F(mode="serial", serial_port="COM17")
 
     print("hardware init ...")
@@ -127,7 +128,8 @@ if __name__ == "__main__":
     time.sleep(1)
 
     print("stand up ...")
-    test_agent.move_all_offset_from_stand([0] * 12, [1000] * 12, [50] * 12)
+    # test_agent.move_all_offset_from_stand([0] * 12, [1000] * 12, [50] * 12)
+    test_agent.move_all_offset_from_urdf_zero([0] * 12, [1000] * 12, [50] * 12)
     time.sleep(1)
 
     # 监听位置
