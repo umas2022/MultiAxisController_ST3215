@@ -8,7 +8,7 @@ import struct
 import sys
 
 sys.path.append("..")
-from MultiAxisSystem.ControllerArm import ControllerArm
+from MultiAxisSystem.ControllerArm6F import ControllerArm
 
 target_ip = "172.23.64.52"
 target_port = 8888

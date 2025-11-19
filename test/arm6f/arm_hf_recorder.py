@@ -9,7 +9,7 @@ import csv
 import sys
 
 sys.path.append("..")
-from MultiAxisSystem.ControllerArm import ControllerArm
+from MultiAxisSystem.ControllerArm6F import ControllerArm
 
 
 # 初始化控制器
