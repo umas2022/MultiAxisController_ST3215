@@ -70,12 +70,12 @@ def main():
     time.sleep(5)
     
     # 2. 启动elrs_teleop_node.py
-    elrs_script = os.path.join(project_root, "ros", "src", "dog12", "scripts", "elrs_teleop_node.py")
+    elrs_script = os.path.join(project_root, "ros", "src", "dog12_a04", "scripts", "elrs_teleop_node.py")
     elrs_cmd = ["python3", elrs_script]
     elrs_proc = run_command(elrs_cmd, "elrs_teleop_node.py")
     
     # 3. 启动ros2real_node.py
-    ros2real_script = os.path.join(project_root, "ros", "src", "dog12", "scripts", "ros2real_node.py")
+    ros2real_script = os.path.join(project_root, "ros", "src", "dog12_a04", "scripts", "ros2real_node.py")
     ros2real_cmd = ["python3", ros2real_script]
     ros2real_proc = run_command(ros2real_cmd, "ros2real_node.py")
     
