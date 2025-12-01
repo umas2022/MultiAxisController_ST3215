@@ -7,8 +7,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from src.controller.ControllerArm8F import ControllerArm
 
 def main():
-    arm = ControllerArm(mode="usb", serial_port="COM7")
-    # arm = ControllerArm(mode="usb", serial_port="/dev/ttyACM0")
+    # arm = ControllerArm(mode="usb", serial_port="COM8")
+    arm = ControllerArm(mode="usb", serial_port="/dev/ttyACM0")
     arm.hardware_init()
 
     print("online_check")

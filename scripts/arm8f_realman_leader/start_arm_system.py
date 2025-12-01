@@ -4,6 +4,11 @@
 启动以下组件：
 1. real_joint7_state.launch.py - 机器人核心launch文件
 2. arm7f_publisher.py - 真机控制节点
+
+source install/setup.sh
+ros2 launch leader_3215_state_publisher real_joint7_state.launch.py
+
+python arm7f_publisher.py
 """
 
 import subprocess

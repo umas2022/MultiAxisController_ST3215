@@ -48,7 +48,7 @@
     <origin xyz="0 0 0.043" rpy="0 0 0" />
     <parent link="base_link" />
     <child link="link1" />
-    <axis xyz="0 0 1" />
+    <axis xyz="0 0 -1" />
     <limit lower="-3.14" upper="3.14" effort="0" velocity="0" />
   </joint>
   <link name="link2">
@@ -106,7 +106,7 @@
     <origin xyz="-0.02 0 0.079" rpy="0 0 0" />
     <parent link="link2" />
     <child link="link3" />
-    <axis xyz="0 0 1" />
+    <axis xyz="0 0 -1" />
     <limit lower="-3.14" upper="3.14" effort="0" velocity="0" />
   </joint>
   <link name="link4">
@@ -164,7 +164,7 @@
     <origin xyz="-0.02 0 0.079" rpy="0 0 0" />
     <parent link="link4" />
     <child link="link5" />
-    <axis xyz="0 0 1" />
+    <axis xyz="0 0 -1" />
     <limit lower="-3.14" upper="3.14" effort="0" velocity="0" />
   </joint>
   <link name="link6">
@@ -222,7 +222,7 @@
     <origin xyz="-0.02 0 0.079" rpy="0 0 0" />
     <parent link="link6" />
     <child link="link7" />
-    <axis xyz="0 0 1" />
+    <axis xyz="0 0 -1" />
     <limit lower="-3.14" upper="3.14" effort="0" velocity="0" />
   </joint>
 </robot>

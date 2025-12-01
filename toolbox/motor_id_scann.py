@@ -80,7 +80,7 @@ def scan_motors(serial_port, baudrate=1000000, start_id=1, end_id=20):
 def main():
     """主函数"""
     # 参数配置
-    serial_port = "COM7"  # Windows串口，Linux可改为"/dev/ttyUSB0"
+    serial_port = "COM8"  # Windows串口，Linux可改为"/dev/ttyUSB0"
     baudrate = 1000000    # 波特率
     start_id = 1          # 起始电机ID
     end_id = 20           # 结束电机ID

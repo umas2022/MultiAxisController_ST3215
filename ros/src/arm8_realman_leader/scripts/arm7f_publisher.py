@@ -7,15 +7,15 @@ import sys
 import os
 
 # Add the project root to the Python path
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', '..'))
 sys.path.insert(0, project_root)
 
 # Import the controller with the correct path
 from src.controller.ControllerArm8F import ControllerArm
 
-class Arm7FPublisher(Node):
+class Arm8FPublisher(Node):
     def __init__(self, serial_port="/dev/ttyACM0", mode="usb"):
-        super().__init__('arm7f_publisher')
+        super().__init__('arm8f_publisher')
         
         # Create publisher for joint states
         self.joint_pub = self.create_publisher(JointState, '/joint_states', 10)
@@ -36,8 +36,9 @@ class Arm7FPublisher(Node):
         # Define joint names (should match URDF)
         self.joint_names = [
             'joint1', 'joint2', 'joint3', 'joint4',
-            'joint5', 'joint6', 'joint7'
+            'joint5', 'joint6', 'joint7', 'joint8'
         ]
+
         
         # Timer to publish joint states at 10Hz
         self.timer = self.create_timer(0.1, self.timer_callback)
@@ -48,14 +49,19 @@ class Arm7FPublisher(Node):
         try:
             # Get joint positions from the real robot arm
             positions = self.arm.get_all_position()
-            
-            if positions and len(positions) == 7:
+
+            if positions and len(positions) == 8:
                 # Convert positions from 0-4096 range to radians
                 # 0-4096 corresponds to approximately -3.14 to 3.14 radians (full circle)
                 joint_positions_rad = []
                 for pos in positions:
-                    # Convert from 0-4096 to -π to π
-                    rad = (pos - 2048) * (2 * 3.14159) / 4096
+                    # # Convert from 0-4096 to -π to π
+                    # rad = (pos - 2048) * (2 * 3.14159) / 4096
+                    # Convert from 0-2048 to 0 to π, 4096 to 2048 to 0 to -π
+                    if pos <= 2048:
+                        rad = (pos) * (3.14159) / 2048
+                    else:
+                        rad = (pos - 4096) * (3.14159) / 2048
                     joint_positions_rad.append(rad)
                 
                 # Create joint state message
@@ -82,7 +88,7 @@ def main(args=None):
     serial_port = "/dev/ttyACM0"
     mode = "usb"
     
-    node = Arm7FPublisher(serial_port=serial_port, mode=mode)
+    node = Arm8FPublisher(serial_port=serial_port, mode=mode)
     
     try:
         rclpy.spin(node)
