@@ -11,7 +11,7 @@ import os
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(project_root)
 
-from src.drivers.motor_driver.STservo_sdk import *
+from robot_driver.src.drivers.motor_driver.STservo_sdk import *
 
 
 def scan_motors(serial_port, baudrate=1000000, start_id=1, end_id=20):

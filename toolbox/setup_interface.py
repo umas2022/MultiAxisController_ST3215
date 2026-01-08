@@ -1,6 +1,8 @@
 """
 st3215电机初始化工具，配合固件pio_serial_setup
 pip install pyqt5 pyserial
+
+此脚本不再更新，推荐使用飞特官方调试软件设定零点
 """
 
 import sys
