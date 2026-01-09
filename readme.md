@@ -12,13 +12,13 @@ pip install pyserial numpy
 
 ## 项目结构
 
-- robot_driver/scripts/
+- robot/scripts/
   - 项目入口
 
-- robot_driver/src/drivers
+- robot/src/drivers
   - 驱动
 
-- robot_driver/src/controllers
+- robot/src/controllers
   - 多轴系统控制类，参见示例ControllerOne.py
 
 - ros/

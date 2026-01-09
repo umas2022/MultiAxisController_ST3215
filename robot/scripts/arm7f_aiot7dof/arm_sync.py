@@ -6,7 +6,7 @@ import time
 import sys
 
 sys.path.append("..")
-from MultiAxisSystem.ControllerArm6F import ControllerArm
+from robot.src.controller.ControllerArm6F import ControllerArm
 
 # 初始化控制器
 arm_leader = ControllerArm(mode="usb", serial_port="COM29")

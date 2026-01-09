@@ -11,7 +11,7 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..
 sys.path.insert(0, project_root)
 
 # Import the controller with the correct path
-from robot_driver.src.controller.ControllerArm8F import ControllerArm
+from robot.src.controller.ControllerArm8F import ControllerArm
 
 class Arm8FPublisher(Node):
     def __init__(self, serial_port="/dev/ttyACM0", mode="usb"):
