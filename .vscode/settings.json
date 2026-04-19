@@ -6,5 +6,7 @@
     "black-formatter.args": [
         "--line-length",
         "200"
-    ]
+    ],
+    "python-envs.defaultEnvManager": "ms-python.python:conda",
+    "python-envs.defaultPackageManager": "ms-python.python:conda"
 }

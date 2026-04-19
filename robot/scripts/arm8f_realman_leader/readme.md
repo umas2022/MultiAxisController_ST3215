@@ -10,3 +10,5 @@ ros2 launch leader_3215_state_publisher real_joint7_state.launch.py
 cd .\ros\src\arm8_realman_leader\scripts\
 python arm7f_publisher.py
 ```
+
+![alt text](image.png)

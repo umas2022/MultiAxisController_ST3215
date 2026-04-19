@@ -21,9 +21,6 @@ pip install pyserial numpy
 - robot/src/controllers
   - 多轴系统控制类，参见示例ControllerOne.py
 
-- ros/
-  - ros节点
-
 - toolbox/
   - 调试工具
 
@@ -37,3 +34,4 @@ pip install pyserial numpy
 - 串口和udp返回消息没有校验
 - get_all_speed函数只完成了usb实现，serial和udp还没写
 - 下位机串口消息最大64字节，超过会丢包
+

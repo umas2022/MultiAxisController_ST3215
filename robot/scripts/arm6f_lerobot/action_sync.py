@@ -8,11 +8,12 @@ import os
 
 # Add the robot directory to the Python path
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
-from src.controller.ControllerArm7F import ControllerArm
+from src.controller.ControllerArm6F import ControllerArm
+
 
 # 初始化控制器
-arm_leader = ControllerArm(mode="usb", serial_port="COM7")
-arm_follower = ControllerArm(mode="usb", serial_port="COM22")
+arm_leader = ControllerArm(mode="usb", serial_port="COM21")
+arm_follower = ControllerArm(mode="usb", serial_port="COM20")
 
 arm_leader.hardware_init()
 arm_follower.hardware_init()
@@ -30,10 +31,10 @@ while True:
     time.sleep(1)
 
 
-arm_follower.move_all_absolute(arm_leader.get_all_position(), [500] * 7, [50] * 7)
+arm_follower.move_all_absolute(arm_leader.get_all_position(), [500] * 6, [50] * 6)
 print("Slave arm initialized to master position.")
 print("start sync ...")
 
 
 while True:
-    arm_follower.move_all_absolute(arm_leader.get_all_position(), [2000] * 7, [0] * 7)
+    arm_follower.move_all_absolute(arm_leader.get_all_position(), [2000] * 6, [0] * 6)

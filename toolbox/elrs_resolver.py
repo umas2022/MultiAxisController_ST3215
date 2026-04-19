@@ -1,78 +1,98 @@
+#!/usr/bin/env python3
 """
-elrs接收机16通道串口数据解析
+ELRS serial resolver based on the reusable ELRSDriver.
+
+This toolbox script is intended for manual bench testing:
+- open an ELRS receiver serial port
+- decode CRSF RC frames through `ELRSDriver`
+- periodically print channel values and selected normalized axes
 """
 
-import serial
+import argparse
+import os
+import sys
 import time
 
-# CRSF 协议常量
-CRSF_ADDRESS = 0xC8
-CRSF_FRAMETYPE_RC_CHANNELS_PACKED = 0x16
-EXPECTED_PAYLOAD_LENGTH = 22  # RC数据包的 payload 长度
-TOTAL_PACKET_LENGTH = EXPECTED_PAYLOAD_LENGTH + 4  # addr + len + type + payload + crc
+# Add project root to import path.
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(project_root)
 
-# 串口初始化
-ser = serial.Serial("COM3", 420000, timeout=0.1)
-
-buffer = bytearray()
-last_print_time = time.time()
+from robot.src.drivers.elrs_driver import ELRSDriver
 
 
-def parse_crsf_packet(packet):
-    if len(packet) < 5:  # addr + len + type + 1字节payload + crc
-        return None
-
-    addr = packet[0]
-    length = packet[1]
-    if length + 2 != len(packet):  # 帧长度 = length + addr/len 字节
-        return None
-
-    type_ = packet[2]
-    if addr == CRSF_ADDRESS and type_ == CRSF_FRAMETYPE_RC_CHANNELS_PACKED:
-        payload = packet[3:-1]  # 去掉crc
-        if len(payload) != EXPECTED_PAYLOAD_LENGTH:
-            return None
-
-        # 解包22字节的RC通道数据
-        bits = int.from_bytes(payload, byteorder="little")
-        channels = []
-        for i in range(16):
-            value = (bits >> (i * 11)) & 0x7FF
-            channels.append(value)
-        return channels
-    return None
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Resolve and print ELRS / CRSF channel data from a serial port.")
+    parser.add_argument("--port", default="COM3", help='Serial port, for example "COM3" or "/dev/ttyUSB0".')
+    parser.add_argument("--baudrate", type=int, default=420000, help="ELRS receiver baudrate. Default: 420000")
+    parser.add_argument("--timeout", type=float, default=0.02, help="Serial timeout in seconds. Default: 0.02")
+    parser.add_argument("--print-interval", type=float, default=1.0, help="Console print interval in seconds. Default: 1.0")
+    parser.add_argument("--max-age", type=float, default=0.5, help="Maximum accepted age for the latest frame. Default: 0.5")
+    return parser.parse_args()
 
 
-try:
-    while True:
-        if ser.in_waiting:
-            data = ser.read(ser.in_waiting)
-            buffer.extend(data)
+def main() -> None:
+    args = parse_args()
 
-            # 尝试从 buffer 中提取合法的帧
-            while len(buffer) >= 3:
-                if buffer[0] != CRSF_ADDRESS:
-                    buffer.pop(0)
-                    continue
+    driver = ELRSDriver(
+        serial_port=args.port,
+        baudrate=args.baudrate,
+        timeout=args.timeout,
+    )
 
-                frame_len = buffer[1]
-                total_len = frame_len + 2  # addr + len + payload + crc
-                if len(buffer) < total_len:
-                    break  # 等待更多数据
+    if not driver.hardware_init():
+        raise SystemExit(1)
 
-                packet = buffer[:total_len]
-                buffer = buffer[total_len:]
+    print(f"[INFO] Listening for ELRS data on {args.port} @ {args.baudrate}")
+    print("[INFO] Press Ctrl+C to stop.")
 
-                result = parse_crsf_packet(packet)
-                if result:
-                    now = time.time()
-                    if now - last_print_time >= 1.0:
-                        print("Channels:", result)
-                        last_print_time = now
-        else:
-            time.sleep(0.01)
+    last_print_time = 0.0
 
-except KeyboardInterrupt:
-    print("用户中断，退出程序")
-finally:
-    ser.close()
+    try:
+        while True:
+            driver.poll()
+
+            now = time.time()
+            if now - last_print_time < args.print_interval:
+                time.sleep(0.002)
+                continue
+
+            channels = driver.get_channels(max_age=args.max_age)
+            if channels is None:
+                age = driver.get_frame_age()
+                if age is None:
+                    print("[WAIT] No valid ELRS frame received yet.")
+                else:
+                    print(f"[WAIT] Latest ELRS frame is stale: age={age:.3f}s")
+                last_print_time = now
+                continue
+
+            axis_roll = driver.get_axis(0, max_age=args.max_age)
+            axis_pitch = driver.get_axis(1, max_age=args.max_age)
+            axis_throttle = driver.get_axis(2, deadband=0.0, max_age=args.max_age)
+            axis_yaw = driver.get_axis(3, max_age=args.max_age)
+
+            print(f"Channels: {channels}")
+            print(
+                "[INFO] axes "
+                f"roll={axis_roll:.3f} "
+                f"pitch={axis_pitch:.3f} "
+                f"throttle={axis_throttle:.3f} "
+                f"yaw={axis_yaw:.3f}"
+            )
+            print(
+                "[INFO] switches "
+                f"ch5={driver.get_switch_state(4, max_age=args.max_age)} "
+                f"ch6={driver.get_switch_state(5, max_age=args.max_age)} "
+                f"age={driver.get_frame_age():.3f}s "
+                f"frames={driver.frame_count}"
+            )
+            last_print_time = now
+
+    except KeyboardInterrupt:
+        print("[INFO] User interrupted, exiting.")
+    finally:
+        driver.close()
+
+
+if __name__ == "__main__":
+    main()
