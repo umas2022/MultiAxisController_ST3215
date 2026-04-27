@@ -1,10 +1,5 @@
-import sys
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-
-
-
-from src.drivers.motor_driver.STservo_sdk import *
 
 
 @dataclass
@@ -17,83 +12,68 @@ class MotorConfig:
 
 
 class MultiAxisControllerInterface(ABC):
-    """
-    多轴控制器接口
-    """
-
     @abstractmethod
     def hardware_init(self) -> bool:
-        """
-        硬件初始化
-        """
         pass
 
     @abstractmethod
     def online_check(self) -> bool:
-        """
-        检查所有电机在线
-        """
         pass
 
     @abstractmethod
     def move_to_absolute(self, motor: MotorConfig, position: int, speed: int, acc: int) -> bool:
-        """
-        Move to absolute position
-        """
         pass
 
     @abstractmethod
     def move_to_offset(self, motor: MotorConfig, offset: int, speed: int, acc: int) -> bool:
-        """
-        Move to offset position
-        """
         pass
 
     @abstractmethod
     def move_excute(self) -> None:
-        """
-        Execute the move command
-        """
         pass
 
     @abstractmethod
     def get_all_position(self) -> list:
-        """
-        获取所有电机位置
-        """
+        pass
+
+    @abstractmethod
+    def get_all_speed(self) -> list:
         pass
 
     @abstractmethod
     def get_all_load(self) -> list:
-        """
-        获取所有电机负载
-        """
         pass
 
     @abstractmethod
     def get_all_temper(self) -> list:
-        """
-        获取所有电机温度
-        """
         pass
 
     @abstractmethod
     def move_all_init(self, spd, acc) -> None:
-        """
-        驱动所有电机到初始位置（中点）
-        """
         pass
 
     @abstractmethod
     def move_all_absolute(self, pos_list: list, spd_list: list, acc_list: list) -> None:
-        """
-        驱动所有电机到给定位置（输入绝对位置）
-        """
         pass
 
     @abstractmethod
     def move_all_offset(self, pos_list: list, spd_list: list, acc_list: list) -> None:
-        """
-        驱动所有电机到给定位置（输入相对于中点的偏移量）
-        """
         pass
+
+    def ping_motor(self, motor_id: int) -> bool:
+        raise NotImplementedError("ping_motor is not implemented for this transport")
+
+    def get_motor_position(self, motor_id: int):
+        raise NotImplementedError("get_motor_position is not implemented for this transport")
+
+    def set_motor_id(self, old_id: int, new_id: int) -> bool:
+        raise NotImplementedError("set_motor_id is not implemented for this transport")
+
+    def set_motor_zero(self, motor_id: int) -> bool:
+        raise NotImplementedError("set_motor_zero is not implemented for this transport")
+
+    def set_wheel_mode(self, motor_id: int) -> bool:
+        raise NotImplementedError("set_wheel_mode is not implemented for this transport")
+
+    def set_motor_speed(self, motor_id: int, speed: int, acc: int = 0) -> bool:
+        raise NotImplementedError("set_motor_speed is not implemented for this transport")

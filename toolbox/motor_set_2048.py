@@ -1,65 +1,33 @@
 #!/usr/bin/env python3
 """
 Set the current ST3215 / STS servo position as the center position (2048).
-
-This mirrors the behavior used by the ESP32 lower controller in
-MultiAxisHandler_ST3215:
-    CalibrationOfs(motor_id) -> writeByte(ID, SMS_STS_TORQUE_ENABLE, 128)
 """
 
 import argparse
-import os
-import sys
 from typing import List, Optional
 
-# Add project root to import path.
-project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(project_root)
-
-from robot.src.drivers.motor_driver.STservo_sdk import COMM_SUCCESS, MAX_ID, PortHandler, sts
-from robot.src.drivers.motor_driver.STservo_sdk.sts import STS_TORQUE_ENABLE
-
-CALIBRATION_TRIGGER = 128
+from motor_toolbox_common import add_connection_args, create_motor_driver
+from robot.src.drivers.motor_driver.STservo_sdk import MAX_ID
 
 
-def scan_online_motors(packet_handler: sts, start_id: int, end_id: int) -> List[int]:
-    """Return all motor IDs that respond to ping in the given range."""
-    online_motors: List[int] = []
-    for current_id in range(start_id, end_id + 1):
-        _, comm_result, _ = packet_handler.ping(current_id)
-        if comm_result == COMM_SUCCESS:
-            online_motors.append(current_id)
-    return online_motors
+def scan_online_motors(driver, start_id: int, end_id: int) -> List[int]:
+    return [current_id for current_id in range(start_id, end_id + 1) if driver.ping_motor(current_id)]
 
 
-def resolve_target_id(
-    packet_handler: sts,
-    motor_id: Optional[int],
-    scan_start: int,
-    scan_end: int,
-) -> Optional[int]:
-    """Resolve which motor should receive the calibration command."""
+def resolve_target_id(driver, motor_id: Optional[int], scan_start: int, scan_end: int) -> Optional[int]:
     if motor_id is not None:
         if not (0 <= motor_id <= MAX_ID):
             print(f"[ERROR] Invalid motor ID: {motor_id}. Valid range is 0-{MAX_ID}.")
             return None
-
-        _, comm_result, sts_error = packet_handler.ping(motor_id)
-        if comm_result == COMM_SUCCESS:
-            if sts_error != 0:
-                print(f"[WARN] Ping on ID {motor_id} returned servo error: {packet_handler.getRxPacketError(sts_error)}")
+        if driver.ping_motor(motor_id):
             return motor_id
+        print(f"[WARN] Motor ID {motor_id} did not respond.")
 
-        print(
-            f"[WARN] Motor ID {motor_id} did not respond: "
-            f"{packet_handler.getTxRxResult(comm_result)}"
-        )
-
-    online_motors = scan_online_motors(packet_handler, scan_start, scan_end)
+    online_motors = scan_online_motors(driver, scan_start, scan_end)
     if not online_motors:
         print(
             f"[ERROR] No online motors found in ID range {scan_start}-{scan_end}. "
-            "Check power, wiring, COM port, baudrate, and whether another program is occupying the port."
+            "Check power, wiring, connection mode, and whether another program is occupying the link."
         )
         return None
 
@@ -76,77 +44,36 @@ def resolve_target_id(
     return None
 
 
-def set_current_position_to_2048(
-    serial_port: str,
-    motor_id: Optional[int],
-    baudrate: int = 1_000_000,
-    scan_start: int = 1,
-    scan_end: int = 20,
-) -> bool:
-    """Trigger the servo's built-in center calibration command."""
-    try:
-        port_handler = PortHandler(serial_port)
-    except Exception as exc:
-        print(f"[ERROR] Failed to init PortHandler: {exc}")
+def set_current_position_to_2048(driver, motor_id: Optional[int], scan_start: int = 1, scan_end: int = 20) -> bool:
+    target_id = resolve_target_id(driver, motor_id, scan_start, scan_end)
+    if target_id is None:
         return False
 
-    if not port_handler.openPort():
-        print(f"[ERROR] Could not open port: {serial_port}")
+    position_before = driver.get_motor_position(target_id)
+    if position_before is None:
+        print("[ERROR] Failed to read current position.")
         return False
 
-    if not port_handler.setBaudRate(baudrate):
-        print(f"[ERROR] Could not set baudrate: {baudrate}")
-        port_handler.closePort()
+    if not driver.set_motor_zero(target_id):
+        print("[ERROR] Failed to trigger center calibration.")
         return False
 
-    packet_handler = sts(port_handler)
-
-    try:
-        target_id = resolve_target_id(packet_handler, motor_id, scan_start, scan_end)
-        if target_id is None:
-            return False
-
-        position_before, comm_result, sts_error = packet_handler.ReadPos(target_id)
-        if comm_result != COMM_SUCCESS:
-            print(f"[ERROR] Failed to read current position: {packet_handler.getTxRxResult(comm_result)}")
-            return False
-        if sts_error != 0:
-            print(f"[ERROR] Read current position returned servo error: {packet_handler.getRxPacketError(sts_error)}")
-            return False
-
-        comm_result, sts_error = packet_handler.write1ByteTxRx(
-            target_id,
-            STS_TORQUE_ENABLE,
-            CALIBRATION_TRIGGER,
-        )
-        if comm_result != COMM_SUCCESS:
-            print(f"[ERROR] Failed to trigger center calibration: {packet_handler.getTxRxResult(comm_result)}")
-            return False
-        if sts_error != 0:
-            print(f"[ERROR] Center calibration returned servo error: {packet_handler.getRxPacketError(sts_error)}")
-            return False
-
-        position_after, comm_result, sts_error = packet_handler.ReadPos(target_id)
-        if comm_result != COMM_SUCCESS:
-            print(f"[WARN] Calibration command sent, but verification read failed: {packet_handler.getTxRxResult(comm_result)}")
-            print(f"[INFO] Position before calibration: {position_before}")
-            return True
-        if sts_error != 0:
-            print(f"[WARN] Verification read returned servo error: {packet_handler.getRxPacketError(sts_error)}")
-
-        print(
-            f"[OK] Center calibration command sent successfully to ID {target_id}. "
-            f"Position: {position_before} -> {position_after}"
-        )
+    position_after = driver.get_motor_position(target_id)
+    if position_after is None:
+        print("[WARN] Calibration command sent, but verification read failed.")
+        print(f"[INFO] Position before calibration: {position_before}")
         return True
-    finally:
-        port_handler.closePort()
+
+    print(
+        f"[OK] Center calibration command sent successfully to ID {target_id}. "
+        f"Position: {position_before} -> {position_after}"
+    )
+    return True
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Set the current ST3215 / STS servo position as center (2048).")
-    parser.add_argument("--port", default="COM5", help='Serial port, for example "COM5" or "/dev/ttyUSB0".')
-    parser.add_argument("--baudrate", type=int, default=1_000_000, help="Bus baudrate. Default: 1000000")
+    add_connection_args(parser)
     parser.add_argument(
         "--id",
         dest="motor_id",
@@ -161,13 +88,8 @@ def parse_args() -> argparse.Namespace:
 
 def main():
     args = parse_args()
-    success = set_current_position_to_2048(
-        serial_port=args.port,
-        motor_id=args.motor_id,
-        baudrate=args.baudrate,
-        scan_start=args.scan_start,
-        scan_end=args.scan_end,
-    )
+    driver = create_motor_driver(args)
+    success = set_current_position_to_2048(driver, motor_id=args.motor_id, scan_start=args.scan_start, scan_end=args.scan_end)
     raise SystemExit(0 if success else 1)
 
 
