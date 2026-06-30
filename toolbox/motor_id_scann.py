@@ -3,11 +3,35 @@
 Scan ST3215 / STS servo IDs over usb, ESP32 serial/Bluetooth serial, or UDP.
 """
 
-import argparse
+from types import SimpleNamespace
 from typing import List
 
-from motor_toolbox_common import add_connection_args, create_motor_driver
+from motor_toolbox_common import create_motor_driver
 from robot.src.drivers.motor_driver.STservo_sdk import MAX_ID
+
+
+# ======================== 可调参数 ========================
+# usb: 电脑通过 USB 转串口直接连接舵机
+# serial: 电脑通过串口/蓝牙串口连接 ESP32
+# udp: 电脑通过 Wi-Fi UDP 连接 ESP32
+CONNECTION_MODE = "usb"
+
+# usb 和 serial 模式使用的 COM 口
+COM_PORT = "COM13"
+
+# serial 模式参数
+SERIAL_BAUDRATE = 115200
+
+# udp 模式参数
+UDP_IP = "192.168.4.1"
+UDP_PORT = 4210
+LOCAL_IP = "0.0.0.0"
+LOCAL_PORT = 4210
+
+# 要扫描的舵机 ID 范围（包含首尾）
+START_ID = 1
+END_ID = 20
+# ==========================================================
 
 
 def scan_motors(driver, start_id: int = 1, end_id: int = 20) -> List[int]:
@@ -37,18 +61,18 @@ def scan_motors(driver, start_id: int = 1, end_id: int = 20) -> List[int]:
     return online_motors
 
 
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Scan online ST3215 / STS motor IDs.")
-    add_connection_args(parser)
-    parser.add_argument("--start-id", type=int, default=1, help="Scan start ID. Default: 1")
-    parser.add_argument("--end-id", type=int, default=20, help="Scan end ID. Default: 20")
-    return parser.parse_args()
-
-
 def main():
-    args = parse_args()
-    driver = create_motor_driver(args)
-    online_motors = scan_motors(driver, start_id=args.start_id, end_id=args.end_id)
+    connection = SimpleNamespace(
+        mode=CONNECTION_MODE,
+        port=COM_PORT,
+        serial_baudrate=SERIAL_BAUDRATE,
+        udp_ip=UDP_IP,
+        udp_port=UDP_PORT,
+        local_ip=LOCAL_IP,
+        local_port=LOCAL_PORT,
+    )
+    driver = create_motor_driver(connection)
+    online_motors = scan_motors(driver, start_id=START_ID, end_id=END_ID)
     raise SystemExit(0 if online_motors else 1)
 
 

@@ -3,11 +3,26 @@
 Read the current position of an ST3215 / STS servo over usb, ESP32 serial, or UDP.
 """
 
-import argparse
+from types import SimpleNamespace
 from typing import List, Optional
 
-from motor_toolbox_common import add_connection_args, create_motor_driver
+from motor_toolbox_common import create_motor_driver
 from robot.src.drivers.motor_driver.STservo_sdk import MAX_ID
+
+
+# ======================== 可调参数 ========================
+CONNECTION_MODE = "usb"  # usb / serial / udp
+COM_PORT = "COM5"        # usb、serial 模式使用
+SERIAL_BAUDRATE = 115200
+UDP_IP = "192.168.4.1"
+UDP_PORT = 4210
+LOCAL_IP = "0.0.0.0"
+LOCAL_PORT = 4210
+
+MOTOR_ID = None  # 指定舵机 ID；None 表示自动查找唯一在线舵机
+SCAN_START = 1
+SCAN_END = 20
+# ==========================================================
 
 
 def scan_online_motors(driver, start_id: int = 1, end_id: int = 20) -> List[int]:
@@ -22,6 +37,10 @@ def resolve_target_id(driver, requested_id: Optional[int], scan_start: int, scan
         if driver.ping_motor(requested_id):
             return requested_id
         print(f"[WARN] Motor ID {requested_id} did not respond.")
+
+    if not (0 <= scan_start <= scan_end <= MAX_ID):
+        print(f"[ERROR] Invalid scan range {scan_start}-{scan_end}. Valid range is 0-{MAX_ID}.")
+        return None
 
     online_motors = scan_online_motors(driver, scan_start, scan_end)
     if not online_motors:
@@ -40,7 +59,7 @@ def resolve_target_id(driver, requested_id: Optional[int], scan_start: int, scan
     if requested_id is not None:
         print("[ERROR] The requested motor ID is not online.")
     else:
-        print("[ERROR] Multiple motors are online. Specify one with --id.")
+        print("[ERROR] Multiple motors are online. Set MOTOR_ID in the script.")
     return None
 
 
@@ -58,25 +77,13 @@ def read_motor_position(driver, motor_id: Optional[int], scan_start: int = 1, sc
     return position
 
 
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Read the current raw position of an ST3215 / STS servo.")
-    add_connection_args(parser)
-    parser.add_argument(
-        "--id",
-        dest="motor_id",
-        type=int,
-        default=None,
-        help="Motor ID to read. If omitted, the script auto-detects a single online motor.",
-    )
-    parser.add_argument("--scan-start", type=int, default=1, help="Start ID used for online scan. Default: 1")
-    parser.add_argument("--scan-end", type=int, default=20, help="End ID used for online scan. Default: 20")
-    return parser.parse_args()
-
-
 def main():
-    args = parse_args()
-    driver = create_motor_driver(args)
-    position = read_motor_position(driver, motor_id=args.motor_id, scan_start=args.scan_start, scan_end=args.scan_end)
+    connection = SimpleNamespace(
+        mode=CONNECTION_MODE, port=COM_PORT, serial_baudrate=SERIAL_BAUDRATE,
+        udp_ip=UDP_IP, udp_port=UDP_PORT, local_ip=LOCAL_IP, local_port=LOCAL_PORT,
+    )
+    driver = create_motor_driver(connection)
+    position = read_motor_position(driver, motor_id=MOTOR_ID, scan_start=SCAN_START, scan_end=SCAN_END)
     raise SystemExit(0 if position is not None else 1)
 
 

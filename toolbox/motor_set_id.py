@@ -3,11 +3,27 @@
 Change the ID of an ST3215 / STS servo over usb, ESP32 serial, or UDP.
 """
 
-import argparse
+from types import SimpleNamespace
 from typing import List, Optional
 
-from motor_toolbox_common import add_connection_args, create_motor_driver
+from motor_toolbox_common import create_motor_driver
 from robot.src.drivers.motor_driver.STservo_sdk import MAX_ID
+
+
+# ======================== 可调参数 ========================
+CONNECTION_MODE = "usb"  # usb / serial / udp
+COM_PORT = "COM5"        # usb、serial 模式使用
+SERIAL_BAUDRATE = 115200
+UDP_IP = "192.168.4.1"
+UDP_PORT = 4210
+LOCAL_IP = "0.0.0.0"
+LOCAL_PORT = 4210
+
+OLD_ID = None  # 当前 ID；None 表示自动查找唯一在线舵机
+NEW_ID = 1     # 要设置的新 ID
+SCAN_START = 1
+SCAN_END = 20
+# ==========================================================
 
 
 def scan_online_motors(driver, start_id: int, end_id: int) -> List[int]:
@@ -22,6 +38,10 @@ def resolve_old_id(driver, old_id: Optional[int], scan_start: int, scan_end: int
         if driver.ping_motor(old_id):
             return old_id
         print(f"[WARN] Motor with old ID {old_id} did not respond.")
+
+    if not (0 <= scan_start <= scan_end <= MAX_ID):
+        print(f"[ERROR] Invalid scan range {scan_start}-{scan_end}. Valid range is 0-{MAX_ID}.")
+        return None
 
     online_motors = scan_online_motors(driver, scan_start, scan_end)
     if not online_motors:
@@ -40,7 +60,7 @@ def resolve_old_id(driver, old_id: Optional[int], scan_start: int, scan_end: int
     if old_id is not None:
         print("[ERROR] The requested old ID is not online.")
     else:
-        print("[ERROR] Multiple motors are online. Specify the current ID with --old-id.")
+        print("[ERROR] Multiple motors are online. Set OLD_ID in the script.")
     return None
 
 
@@ -57,6 +77,10 @@ def change_motor_id(driver, old_id: Optional[int], new_id: int, scan_start: int 
         print("[ERROR] Old ID and new ID are identical. Nothing to change.")
         return False
 
+    if driver.ping_motor(new_id):
+        print(f"[ERROR] New ID {new_id} is already in use. Choose an unused ID.")
+        return False
+
     if not driver.set_motor_id(current_id, new_id):
         print(f"[ERROR] Failed to change motor ID: {current_id} -> {new_id}")
         return False
@@ -64,29 +88,21 @@ def change_motor_id(driver, old_id: Optional[int], new_id: int, scan_start: int 
     if driver.ping_motor(current_id):
         print(f"[WARN] Old ID {current_id} still responds. Check whether multiple motors are on the bus.")
 
+    if not driver.ping_motor(new_id):
+        print(f"[ERROR] ID change command was sent, but new ID {new_id} did not respond.")
+        return False
+
     print(f"[OK] Motor ID changed successfully: {current_id} -> {new_id}")
     return True
 
 
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Change the ID of an ST3215 / STS servo.")
-    add_connection_args(parser)
-    parser.add_argument(
-        "--old-id",
-        type=int,
-        default=None,
-        help="Current motor ID. If omitted, the script auto-detects a single online motor.",
-    )
-    parser.add_argument("--new-id", type=int, required=True, help="Target motor ID.")
-    parser.add_argument("--scan-start", type=int, default=1, help="Start ID used for online scan. Default: 1")
-    parser.add_argument("--scan-end", type=int, default=20, help="End ID used for online scan. Default: 20")
-    return parser.parse_args()
-
-
 def main():
-    args = parse_args()
-    driver = create_motor_driver(args)
-    success = change_motor_id(driver, old_id=args.old_id, new_id=args.new_id, scan_start=args.scan_start, scan_end=args.scan_end)
+    connection = SimpleNamespace(
+        mode=CONNECTION_MODE, port=COM_PORT, serial_baudrate=SERIAL_BAUDRATE,
+        udp_ip=UDP_IP, udp_port=UDP_PORT, local_ip=LOCAL_IP, local_port=LOCAL_PORT,
+    )
+    driver = create_motor_driver(connection)
+    success = change_motor_id(driver, old_id=OLD_ID, new_id=NEW_ID, scan_start=SCAN_START, scan_end=SCAN_END)
     raise SystemExit(0 if success else 1)
 
 
