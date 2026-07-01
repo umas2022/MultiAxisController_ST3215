@@ -7,19 +7,19 @@ from types import SimpleNamespace
 from typing import List, Optional
 
 from motor_toolbox_common import create_motor_driver
-from robot.src.drivers.motor_driver.STservo_sdk import MAX_ID
+from multiaxis_driver.motor.STservo_sdk.stservo_def import MAX_ID
 
 
 # ======================== 可调参数 ========================
 CONNECTION_MODE = "usb"  # usb / serial / udp
-COM_PORT = "COM5"        # usb、serial 模式使用
+COM_PORT = "COM16"        # usb、serial 模式使用
 SERIAL_BAUDRATE = 115200
 UDP_IP = "192.168.4.1"
 UDP_PORT = 4210
 LOCAL_IP = "0.0.0.0"
 LOCAL_PORT = 4210
 
-MOTOR_ID = None  # 指定舵机 ID；None 表示自动查找唯一在线舵机
+MOTOR_ID = 2  # 指定舵机 ID；None 表示自动查找唯一在线舵机
 SCAN_START = 1
 SCAN_END = 20
 # ==========================================================

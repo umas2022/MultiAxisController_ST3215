@@ -8,15 +8,13 @@ import os
 import sys
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-ROBOT_ROOT = os.path.join(PROJECT_ROOT, "robot")
+DRIVERS_SRC = os.path.join(PROJECT_ROOT, "drivers", "src")
 
-for extra_path in (PROJECT_ROOT, ROBOT_ROOT):
+for extra_path in (PROJECT_ROOT, DRIVERS_SRC):
     if extra_path not in sys.path:
         sys.path.append(extra_path)
 
-from robot.src.drivers.motor_driver.MultiAxisControllerSerial import MultiAxisSerial
-from robot.src.drivers.motor_driver.MultiAxisControllerUDP import MultiAxisUdp
-from robot.src.drivers.motor_driver.MultiAxisControllerUSB import MultiAxisUSB
+from multiaxis_driver.motor import MultiAxisSerial, MultiAxisUdp, MultiAxisUSB
 
 
 def add_connection_args(parser: argparse.ArgumentParser, default_port: str = "COM5") -> None:

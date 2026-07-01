@@ -7,7 +7,7 @@ from types import SimpleNamespace
 from typing import List
 
 from motor_toolbox_common import create_motor_driver
-from robot.src.drivers.motor_driver.STservo_sdk import MAX_ID
+from multiaxis_driver.motor.STservo_sdk.stservo_def import MAX_ID
 
 
 # ======================== 可调参数 ========================
@@ -17,7 +17,7 @@ from robot.src.drivers.motor_driver.STservo_sdk import MAX_ID
 CONNECTION_MODE = "usb"
 
 # usb 和 serial 模式使用的 COM 口
-COM_PORT = "COM13"
+COM_PORT = "COM16"
 
 # serial 模式参数
 SERIAL_BAUDRATE = 115200

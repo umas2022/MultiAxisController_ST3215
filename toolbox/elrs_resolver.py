@@ -13,11 +13,12 @@ import os
 import sys
 import time
 
-# Add project root to import path.
+# Add the standalone driver package to the import path for repository-local use.
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(project_root)
+drivers_src = os.path.join(project_root, "drivers", "src")
+sys.path.append(drivers_src)
 
-from robot.src.drivers.elrs_driver import ELRSDriver
+from multiaxis_driver.elrs import ELRSDriver
 
 
 def parse_args() -> argparse.Namespace:

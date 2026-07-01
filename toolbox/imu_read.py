@@ -9,12 +9,12 @@ import sys
 import time
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-ROBOT_ROOT = os.path.join(PROJECT_ROOT, "robot")
-for extra_path in (PROJECT_ROOT, ROBOT_ROOT):
+DRIVERS_SRC = os.path.join(PROJECT_ROOT, "drivers", "src")
+for extra_path in (PROJECT_ROOT, DRIVERS_SRC):
     if extra_path not in sys.path:
         sys.path.append(extra_path)
 
-from robot.src.drivers.imu_driver import IMUDriverSerial, IMUDriverUSB
+from multiaxis_driver.imu import IMUDriverSerial, IMUDriverUSB
 
 
 def parse_args() -> argparse.Namespace:

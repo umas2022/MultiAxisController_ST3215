@@ -1,0 +1,1 @@
+"""Protocol resolver interfaces."""

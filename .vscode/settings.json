@@ -7,6 +7,9 @@
         "--line-length",
         "200"
     ],
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}/drivers/src"
+    ],
     "python-envs.defaultEnvManager": "ms-python.python:conda",
     "python-envs.defaultPackageManager": "ms-python.python:conda"
 }
